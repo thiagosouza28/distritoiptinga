@@ -24,14 +24,14 @@ export class Igrejas {
                     <tbody>
                         ${data.map(igreja => `
                             <tr>
-                                <td>${igreja.nome}</td>
+                                <td>${igreja.igreja}</td>
                                 <td>${igreja.distrito}</td>
                                 <td>${igreja.membros || 0}</td>
                                 <td class="actions">
-                                    <button onclick="dashboard.openModal('igreja', '${igreja._id}')" class="btn-edit">
+                                    <button onclick="dashboard.openModal('igreja', '${igreja.igreja}')" class="btn-edit">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button onclick="dashboard.deleteItem('igrejas', '${igreja._id}')" class="btn-delete">
+                                    <button onclick="dashboard.deleteItem('igrejas', '${igreja.igreja}')" class="btn-delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
