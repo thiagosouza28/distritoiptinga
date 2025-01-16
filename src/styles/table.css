@@ -1,0 +1,47 @@
+/* Tabela de dados */
+.table-container {
+  overflow-x: auto; /* Scroll horizontal para tabelas em telas menores */
+  margin-top: var(--spacing-md);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--spacing-md);
+  background-color: white;
+  border-radius: var(--border-radius); /* Cantos arredondados */
+  box-shadow: 0 4px 6px -6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+  border-spacing: 0; /* Remove espaço entre as bordas */
+  overflow: hidden; /* Garante que a borda arredondada seja aplicada corretamente */
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px 15px; /* Aumenta o padding para um visual mais espaçoso */
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.data-table th {
+  background-color: var(--light-gray);
+  font-weight: 600;
+  color: var(--text-dark); /* Cor do texto um pouco mais escura para contraste */
+  border-bottom: 2px solid var(--primary); /* Borda inferior mais escura para destacar o cabeçalho */
+}
+
+.data-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9; /* Cor de fundo para linhas pares */
+}
+
+.data-table tbody tr:hover {
+  background-color: #e8f0fe; /* Cor de fundo para hover nas linhas, azul claro */
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none; /* Remove a borda inferior da última linha */
+}
+
+/* Estilos para os botões dentro da tabela */
+.data-table .actions button {
+  margin-right: 5px; /* Espaçamento entre os botões */
+}

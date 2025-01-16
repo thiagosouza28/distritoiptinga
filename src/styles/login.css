@@ -1,0 +1,270 @@
+/* Importação de fontes */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Variáveis CSS */
+:root {
+    --primary-color: #4a90e2;
+    --primary-color-dark: #357abd; /* Variação mais escura da cor primária */
+    --primary-color-light: #e1eaf7; /* Variação mais clara para hover */
+    --error-color: #dc3545;
+    --success-color: #28a745;
+    --background-color: #f8f9fa;
+    --text-color: #333;
+    --text-light: #666; /* Cor de texto secundária */
+    --border-color: #ddd;
+    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    --box-shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.15); /* Sombra mais intensa no hover */
+    --font-size-base: 1rem; /* Base font size */
+    --font-size-lg: 1.25rem; /* Large font size */
+    --font-size-sm: 0.875rem; /* Small font size */
+    --border-radius: 5px; /* Radius para bordas */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+    --transition: all 0.3s ease; /* Transição padrão */
+}
+
+/* Reset e estilos globais */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    transition: background 0.3s ease;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: var(--transition); /* Adiciona transição suave */
+}
+
+/* Efeito de hover suave nos botões */
+button:hover {
+    opacity: 0.8;
+    transform: translateY(-1px); /* Leve efeito de elevação */
+    box-shadow: var(--box-shadow-hover);
+}
+
+/* Estilos para campos de formulário */
+input, select, textarea {
+    border: 1px solid var(--border-color);
+    background-color: white;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Transição para borda e sombra */
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.25); /* Sombra ao redor do campo focado */
+}
+
+/* Estilos para o container principal */
+.container {
+    width: 100%;
+    max-width: 400px;
+    padding: var(--spacing-sm);
+}
+
+/* Animação para o container de login */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-container {
+    animation: fadeInUp 0.5s ease-out;
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+/* Cabeçalho do login */
+.login-header {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.logo {
+    width: 80px;
+    height: 80px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.login-header h1 {
+    color: var(--text-color);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}
+
+/* Grupo de inputs */
+.input-group {
+    position: relative;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Ícones dentro dos inputs */
+.input-group i {
+    position: absolute;
+    left: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+}
+
+/* Ícone para mostrar/esconder senha */
+.input-group .toggle-password {
+    left: auto;
+    right: var(--spacing-md);
+    cursor: pointer;
+}
+
+/* Estilos para inputs */
+.input-group input {
+    width: 100%;
+    padding: 12px 40px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    transition: border-color 0.3s ease;
+}
+
+.input-group input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* Opções do formulário (lembrar-me e esqueceu a senha) */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    cursor: pointer;
+    color: var(--text-light);
+}
+
+.remember-me input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.forgot-password {
+    color: var(--primary-color);
+    font-size: var(--font-size-sm);
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+    color: var(--primary-color-dark);
+}
+
+/* Botão de login */
+.login-button {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+    background: var(--primary-color-dark);
+}
+
+/* Mensagens de erro e sucesso */
+.message {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    text-align: center;
+    display: none;
+}
+
+.message.error {
+    background-color: #ffe6e6;
+    color: var(--error-color);
+    display: block;
+}
+
+.message.success {
+    background-color: #e6ffe6;
+    color: var(--success-color);
+    display: block;
+}
+
+/* Media query para responsividade em telas menores */
+@media (max-width: 480px) {
+    .container {
+        padding: var(--spacing-sm);
+    }
+
+    .login-container {
+        padding: var(--spacing-md);
+    }
+
+    .input-group input {
+        padding: 10px 30px; /* Reduz um pouco o padding em telas menores */
+    }
+
+    .login-button {
+        font-size: 1rem; /* Reduz um pouco o tamanho da fonte do botão */
+    }
+}
+
+/* Estilo para esconder elementos visualmente, mas manter acessibilidade */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}

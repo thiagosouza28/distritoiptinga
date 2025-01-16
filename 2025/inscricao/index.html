@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscrição de Participante</title>
+    <link rel="stylesheet" href="../../src/styles/inscricao.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="background"></div>
+    <div class="container" role="main">
+        <div class="logo-container">
+            <img src="../../src/assets/logo-mrnt.png" alt="Logotipo do evento" class="logo">
+        </div>
+        <div class="form-wrapper">
+            <h1 id="formTitle" class="main-title">RETIRO ESPIRITUAL 2025</h1>
+            <h2 class="sub-title">DISTRITO DO IPITINGA</h2>
+            <h3 class="form-title">Inscrição de Participante</h3>
+            <form id="inscricaoForm" aria-labelledby="formTitle">
+                <div class="input-group">
+                    <label for="nome" id="nomeLabel">Nome:</label>
+                    <input type="text" id="nome" name="nome" aria-required="true" aria-describedby="nomeLabel" required>
+                </div>
+                <div class="input-group">
+                    <label for="email" id="emailLabel">Email:</label>
+                    <input type="email" id="email" name="email" aria-required="true" aria-describedby="emailLabel" required>
+                </div>
+                <div class="input-group">
+                    <label for="nascimento" id="nascimentoLabel">Data de Nascimento:</label>
+                    <input type="date" id="nascimento" name="nascimento" aria-required="true" aria-describedby="nascimentoLabel" required>
+                </div>
+                <div class="input-group">
+                    <label for="igreja" id="igrejaLabel">Igreja:</label>
+                    <select id="igreja" name="igreja" aria-required="true" aria-describedby="igrejaLabel" required>
+                        <option value="">Selecione uma Igreja</option>
+                    </select>
+                </div>
+                 <button type="submit" class="btn">Enviar Inscrição</button>
+            </form>
+         </div>
+        <div id="processingOverlay" class="overlay" style="display: none;" aria-busy="true" aria-live="polite">
+           <div class="modal" role="dialog" aria-labelledby="processingModalLabel">
+               <h2 id="processingModalLabel">Processando Inscrição</h2>
+               <div class="loading-spinner" style="display:flex"></div>
+                <p>Aguarde enquanto processamos sua inscrição...</p>
+           </div>
+       </div>
+        <div id="confirmationModal" class="modal" aria-modal="true" role="dialog" aria-labelledby="confirmationModalLabel"
+           style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="confirmationModalLabel">Inscrição Realizada</h2>
+                    <button type="button" class="close-modal" aria-label="Fechar Modal"
+                         onclick="hideConfirmationModal()">×</button>
+               </div>
+               <div class="modal-body">
+                    <p>Sua inscrição foi realizada com sucesso!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../../src/js/inscricao.js"></script>
+</body>
+
+</html>

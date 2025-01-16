@@ -1,0 +1,67 @@
+/* Botões de ação */
+.actions {
+  text-align: center;
+  white-space: nowrap; /* Impede que os botões quebrem para a próxima linha */
+}
+
+.btn-edit,
+.btn-delete {
+  border: none;
+  padding: 8px 12px; /* Reduz um pouco o padding */
+  margin-left: var(--spacing-sm); /* Espaçamento entre os botões */
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease; /* Transição mais rápida */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+}
+
+.btn-edit {
+  background-color: var(--info); /* Fundo azul */
+  color: var(--text-light); /* Texto branco */
+}
+
+.btn-delete {
+  background-color: var(--danger); /* Fundo vermelho */
+  color: var(--text-light); /* Texto branco */
+}
+
+.btn-edit:hover {
+  background-color: var(--info-light); /* Tom mais claro de azul no hover */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* Sombra mais pronunciada no hover */
+}
+
+.btn-delete:hover {
+  background-color: #e53935; /* Tom mais escuro de vermelho no hover */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* Sombra mais pronunciada no hover */
+}
+
+.actions i {
+  font-size: 1rem; /* Tamanho do ícone ligeiramente reduzido */
+}
+
+/* Botão de Adicionar */
+.btn-add {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease; /* Transição para background e sombra */
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+}
+
+.btn-add:hover {
+  background-color: var(--primary-light);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Sombra mais intensa no hover */
+}
+
+.btn-add i {
+  font-size: 1.1rem;
+}
