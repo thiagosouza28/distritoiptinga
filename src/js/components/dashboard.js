@@ -39,6 +39,7 @@ export default class Dashboard {
                 avatar: document.getElementById('userAvatar')
             },
             loadingSpinner: document.querySelector('.loading-spinner'),
+             confirmationModal: document.getElementById('confirmationModal'),
         };
         this.modal.setElements(
             document.getElementById('profileModal'),
@@ -81,39 +82,70 @@ export default class Dashboard {
 
     async confirmPayment(participanteId) {
         try {
+             this.showConfirmationModal("Processando Pagamento", 'Aguarde enquanto confirmamos o pagamento...');
             const response = await this.makeRequest(`/participantes/${participanteId}/confirmar-pagamento`, {
                 method: 'PUT'
             });
             if (response.ok) {
-                this.showNotification('Pagamento confirmado com sucesso!', 'success');
+                 this.showConfirmationModal('Pagamento confirmado com sucesso!', 'Pagamento confirmado com sucesso!');
                 await this.loadPage('participantes');
             } else {
                  const errorData = await response.json();
-                this.showNotification(`Erro ao confirmar pagamento: ${errorData.message || 'Erro Desconhecido'}`, 'error');
-            }
+                 this.showNotification(`Erro ao confirmar pagamento: ${errorData.message || 'Erro Desconhecido'}`, 'error');
+             }
         } catch (error) {
-            console.error('Erro ao confirmar pagamento:', error);
-           this.showNotification('Erro ao confirmar pagamento', 'error');
+             console.error('Erro ao confirmar pagamento:', error);
+             this.showNotification('Erro ao confirmar pagamento', 'error');
+         } finally {
+             this.hideConfirmationModal();
         }
     }
 
     async unconfirmPayment(id_participante) {
         try {
+              this.showConfirmationModal("Processando Cancelamento", 'Aguarde enquanto cancelamos a confirmação de pagamento...');
             const response = await this.makeRequest(`/participantes/${id_participante}/cancelar-confirmacao`, {
                 method: 'PUT'
             });
 
-            if (response.ok) {
-                this.showNotification('Confirmação de pagamento cancelada!', 'success');
+             if (response.ok) {
+                 this.showConfirmationModal('Confirmação de pagamento cancelada!', 'Confirmação de pagamento cancelada com sucesso!');
                 await this.loadPage('participantes');
             } else {
                  const errorData = await response.json();
-               this.showNotification(`Erro ao cancelar confirmação de pagamento: ${errorData.message || 'Erro Desconhecido'}`, 'error');
+                this.showNotification(`Erro ao cancelar confirmação de pagamento: ${errorData.message || 'Erro Desconhecido'}`, 'error');
             }
-        } catch (error) {
+       } catch (error) {
             console.error('Erro ao cancelar confirmação de pagamento:', error);
              this.showNotification('Erro ao cancelar confirmação de pagamento', 'error');
-        }
+        } finally {
+            this.hideConfirmationModal();
+       }
+    }
+   
+    async deleteItem(page, itemId) {
+        if (!confirm(`Tem certeza que deseja excluir este item?`)) {
+            return;
+       }
+
+        try {
+          this.showConfirmationModal("Processando Exclusão", 'Aguarde enquanto excluímos o item...');
+            const response = await this.makeRequest(`/${page}/${itemId}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                this.showNotification(`Item excluído com sucesso da página ${page}!`, 'success');
+                await this.loadPage(page);
+           } else {
+                const errorData = await response.json();
+                this.showNotification(`Erro ao excluir item da página ${page}: ${errorData.message || 'Erro Desconhecido'}`, 'error');
+            }
+       } catch (error) {
+           console.error(`Erro ao excluir item da página ${page}:`, error);
+           this.showNotification(`Erro ao excluir item da página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
+       } finally {
+          this.hideConfirmationModal();
+       }
     }
 
     async toggleConfirmPayment(id_participante) {
@@ -135,8 +167,8 @@ export default class Dashboard {
             }
         } catch (error) {
             console.error('Erro ao alterar status de pagamento:', error);
-            this.showNotification('Erro ao alterar status de pagamento', 'error');
-        }
+           this.showNotification('Erro ao alterar status de pagamento', 'error');
+       }
     }
 
     async loadUserInfo() {
@@ -203,7 +235,7 @@ export default class Dashboard {
         await this.loadPage(page);
     }
 
-     async loadPage(page) {
+    async loadPage(page) {
         try {
             this.showLoading();
             let endpoint = `/${page}`;
@@ -219,50 +251,49 @@ export default class Dashboard {
                 }
             }
 
-            if (page === 'participantes' && this.userRole === 'diretor_jovem' && this.userChurch) {
-                  queryParams = {
+
+             if (page === 'participantes' && this.userRole === 'diretor_jovem' && this.userChurch ) {
+                queryParams = {
                     igreja: this.userChurch,
-                };
+                 };
                 endpoint += '?' + new URLSearchParams(queryParams).toString();
-             }
+            }
 
-             console.log(`Chamando: ${endpoint}`);
-             const response = await this.makeRequest(endpoint);
-
+            console.log(`Chamando: ${endpoint}`);
+            const response = await this.makeRequest(endpoint);
 
             if (response && response.ok) {
-                 const data = await response.json();
-                 if (page === 'transacoes' && typeof data === 'object' && data.transactions && Array.isArray(data.transactions)) {
+                const data = await response.json();
+                if (page === 'transacoes' && typeof data === 'object' && data.transactions && Array.isArray(data.transactions)) {
                     this.renderPage(page, data.transactions, this.igrejasData);
-                 } else {
+                } else {
                     this.renderPage(page, data);
-                 }
-            }
+               }
+           }
             else {
-               let errorMessage = `Erro na requisição para ${endpoint}: `;
-                if(response){
-                  try {
-                      const errorData = await response.json();
+                let errorMessage = `Erro na requisição para ${endpoint}: `;
+               if(response){
+                   try {
+                       const errorData = await response.json();
                        errorMessage += errorData.message || 'Erro Desconhecido';
-                    } catch (error) {
+                   } catch (error) {
                        errorMessage +=  'Erro ao processar resposta do servidor';
                    }
                } else {
                     errorMessage += 'Sem resposta do servidor';
                }
-              throw new Error(errorMessage);
-             }
-         } catch (error) {
-            console.error(`Erro ao carregar a página ${page}:`, error);
+                throw new Error(errorMessage);
+            }
+       } catch (error) {
+           console.error(`Erro ao carregar a página ${page}:`, error);
            this.showNotification(`Erro ao carregar a página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
-         } finally {
-           this.hideLoading();
-        }
+       } finally {
+            this.hideLoading();
+       }
     }
 
-
     renderPage(page, data, igrejasData = null) {
-        let html;
+         let html;
         switch (page) {
             case 'usuarios':
                 html = this.usuarios.renderUsuarios(data);
@@ -273,11 +304,11 @@ export default class Dashboard {
              case 'participantes':
                 html = this.participantes.renderParticipantes(data);
                 break;
-            case 'transacoes':
-               html = this.transacoes.renderTransacoes(data, igrejasData);
-               break;
+             case 'transacoes':
+                html = this.transacoes.renderTransacoes(data, igrejasData);
+                break;
             default:
-               html = '<div>Página não encontrada</div>';
+                html = '<div>Página não encontrada</div>';
                 break;
         }
 
@@ -285,12 +316,12 @@ export default class Dashboard {
     }
 
     async makeRequest(endpoint, options = {}) {
-         const token = localStorage.getItem('token');
-         const defaultOptions = {
+        const token = localStorage.getItem('token');
+        const defaultOptions = {
             headers: {
-                 'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-           }
+            }
         };
 
         try {
@@ -298,34 +329,27 @@ export default class Dashboard {
                 ...defaultOptions,
                 ...options
             });
-           if (!response.ok) {
-               let errorData = {};
-                try {
-                   errorData = await response.json();
-               } catch (jsonError) {
-                    console.error('Erro ao fazer parse do JSON de erro', jsonError);
-                   errorData = { message: `Erro ao buscar dados em ${endpoint}` };
-               }
-               const errorMessage = errorData.message || `Erro ao buscar dados em ${endpoint}`;
-              throw new Error(errorMessage);
+            if (!response.ok) {
+                const errorData = await response.json()
+                 throw new Error(`Erro na requisição para ${endpoint}: ${errorData.message || 'Erro Desconhecido'}`);
             }
            return response;
         } catch (error) {
-             console.error(`Erro na requisição para ${endpoint}:`, error);
-             throw error;
+           console.error(`Erro na requisição para ${endpoint}:`, error);
+            throw error;
         }
     }
 
     showLoading() {
-         if (this.elements.loadingSpinner) {
-             this.elements.loadingSpinner.style.display = 'flex';
-        }
+       if (this.elements.loadingSpinner) {
+          this.elements.loadingSpinner.style.display = 'flex';
+      }
    }
 
     hideLoading() {
-         if (this.elements.loadingSpinner) {
-            this.elements.loadingSpinner.style.display = 'none';
-        }
+         if(this.elements.loadingSpinner){
+           this.elements.loadingSpinner.style.display = 'none';
+       }
     }
 
     formatDate(date) {
@@ -343,31 +367,32 @@ export default class Dashboard {
                 currency: 'BRL'
             });
         } else {
-            return 'Valor Inválido';
+           return 'Valor Inválido';
         }
     }
 
     calculateAge(birthDate) {
         const birth = new Date(birthDate);
         const today = new Date();
-        let age = today.getFullYear() - birth.getFullYear();
+       let age = today.getFullYear() - birth.getFullYear();
         if (
             today.getMonth() - birth.getMonth() <= 0 &&
-            today.getDate() - birth.getDate() <= 0
+           today.getDate() - birth.getDate() <= 0
         ) age--;
         return age;
     }
 
     showNotification(message, type = 'info') {
-       const notification = document.createElement('div');
-       notification.className = `notification ${type}`;
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
        notification.innerHTML = `
-           <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
-           ${message}
+            <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+            ${message}
        `;
        document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 3000);
     }
+
 
     handleLogout() {
         localStorage.removeItem('token');
@@ -375,34 +400,35 @@ export default class Dashboard {
     }
 
     toggleSidebar() {
-       this.elements.sidebar.classList.toggle('active');
+        this.elements.sidebar.classList.toggle('active');
     }
 
-    openModal(modalId, itemId = null) {
-        this.selectedItemId = itemId;
-       this.modal.openModal(modalId, itemId);
-   }
+     openModal(modalId, itemId = null) {
+         this.selectedItemId = itemId;
+        this.modal.openModal(modalId, itemId);
+    }
 
-    closeModal() {
-       this.modal.closeModal();
+     closeModal() {
+         this.modal.closeModal();
         this.selectedItemId = null;
     }
 
     openProfileModal() {
-       this.modal.openProfileModal();
-   }
+        this.modal.openProfileModal();
+    }
 
-   closeProfileModal() {
-      this.modal.closeProfileModal();
-   }
+    closeProfileModal() {
+        this.modal.closeProfileModal();
+    }
 
     openSettingsModal() {
-      this.modal.openSettingsModal();
+       this.modal.openSettingsModal();
     }
 
     closeSettingsModal() {
-        this.modal.closeSettingsModal();
-    }
+       this.modal.closeSettingsModal();
+   }
+
 
    async handleFormSubmit(e, page) {
         e.preventDefault();
@@ -411,156 +437,187 @@ export default class Dashboard {
         const data = Object.fromEntries(formData.entries());
 
         const selectIgreja = form.querySelector('#igreja');
-        if (selectIgreja && selectIgreja.value) {
-            const selectedIgreja = selectIgreja.value;
-            if (selectedIgreja) {
-               data.igreja = selectedIgreja;
-              data.igreja = selectIgreja.options[selectIgreja.selectedIndex].text;
-           }
-        }
+        if(selectIgreja && selectIgreja.value) {
+             const selectedIgrejaId = selectIgreja.value;
+           if (selectedIgrejaId) {
+                data.id_igreja = selectedIgrejaId;
+                data.igreja = selectIgreja.options[selectIgreja.selectedIndex].text;
+            }
+       }
 
-        try {
-           let method = 'POST';
-           let url = `/${page}`;
-
+      try {
+            let method = 'POST';
+            let url = `/${page}`;
            if (this.selectedItemId) {
-               method = 'PUT';
+                method = 'PUT';
                url += `/${this.selectedItemId}`;
-           }
-          const response = await this.makeRequest(url, {
-                method: method,
-               body: JSON.stringify(data)
-           });
+            }
 
-            if (response.ok) {
-               this.showNotification(`Item ${this.selectedItemId ? 'atualizado' : 'adicionado'} com sucesso na página ${page}!`, 'success');
-              this.closeModal();
-                await this.loadPage(page);
-           } else {
-              const errorData = await response.json();
+            const response = await this.makeRequest(url, {
+               method: method,
+              body: JSON.stringify(data)
+          });
+
+           if (response.ok) {
+                this.showNotification(`Item ${this.selectedItemId ? 'atualizado' : 'adicionado'} com sucesso na página ${page}!`, 'success');
+               this.closeModal();
+               await this.loadPage(page);
+            } else {
+                const errorData = await response.json();
                 this.showNotification(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}: ${errorData.message || 'Erro Desconhecido'}`, 'error');
            }
        } catch (error) {
-            console.error(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}:`, error);
-           this.showNotification(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
+           console.error(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}:`, error);
+            this.showNotification(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
         }
-    }
+   }
 
-    isValidObjectId(id) {
+  isValidObjectId(id) {
         const ObjectId = (m = (id) => {
             if (!m.Types.ObjectId.isValid(id)) {
                 throw new Error('ID inválido');
            }
              return id;
-        })(mongoose);
+       })(mongoose);
 
         try {
-            ObjectId(id);
-            return true;
-        } catch (error) {
-            return false;
+           ObjectId(id);
+           return true;
+       } catch (error) {
+           return false;
         }
-    }
+   }
 
     async deleteItem(page, itemId) {
         if (!confirm(`Tem certeza que deseja excluir este item?`)) {
             return;
-       }
-
-        try {
-           const response = await this.makeRequest(`/${page}/${itemId}`, {
+        }
+         try {
+             const response = await this.makeRequest(`/${page}/${itemId}`, {
                 method: 'DELETE'
            });
-           if (response.ok) {
-               this.showNotification(`Item excluído com sucesso da página ${page}!`, 'success');
+            if (response.ok) {
+                 this.showNotification(`Item excluído com sucesso da página ${page}!`, 'success');
                await this.loadPage(page);
            } else {
-              const errorData = await response.json();
+               const errorData = await response.json();
                this.showNotification(`Erro ao excluir item da página ${page}: ${errorData.message || 'Erro Desconhecido'}`, 'error');
            }
-        } catch (error) {
-            console.error(`Erro ao excluir item da página ${page}:`, error);
+       } catch (error) {
+           console.error(`Erro ao excluir item da página ${page}:`, error);
            this.showNotification(`Erro ao excluir item da página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
-       }
+        } finally {
+             this.hideConfirmationModal();
+        }
     }
-
     handleLanguageChange() {
-       this.modal.handleLanguageChange();
+        this.modal.handleLanguageChange();
     }
 
-    handleNotificationChange() {
-       this.modal.handleNotificationChange();
+     handleNotificationChange() {
+        this.modal.handleNotificationChange();
     }
 
-    async fetchItem(page, itemId = null) {
+     async fetchItem(page, itemId = null) {
         let endpoint = `/${page}`;
-       if (itemId) {
-             endpoint += `/${itemId}`;
-        }
-        else if (page !== 'usuarios' && page !== 'transacoes' && page !== 'igrejas' && page !== 'participantes') {
-           throw new Error(`ID do item é obrigatório para a página ${page}`);
-        }
-
-       const response = await this.makeRequest(endpoint);
-       if (!response.ok) {
-            throw new Error(`Erro ao carregar o item ${itemId} de ${page}`);
+        if (itemId) {
+           endpoint += `/${itemId}`;
        }
-      return response.json();
+        else if (page !== 'usuarios' && page !== 'transacoes' && page !== 'igrejas' && page !== 'participantes') {
+            throw new Error(`ID do item é obrigatório para a página ${page}`);
+       }
+
+        const response = await this.makeRequest(endpoint);
+        if (!response.ok) {
+            throw new Error(`Erro ao carregar o item ${itemId} de ${page}`);
+        }
+        return response.json();
     }
 
      async fetchItems(page) {
         try {
             const response = await this.makeRequest(`/${page}`);
-            if (!response.ok) {
+           if (!response.ok) {
                 throw new Error(`Erro ao carregar itens de ${page}`);
-            }
-            return response.json();
-         }
-        catch(error){
-           console.error(`Erro ao buscar itens de ${page}:`, error)
-            this.showNotification(`Erro ao buscar itens de ${page}`, 'error');
+          }
+           return response.json();
         }
+       catch(error){
+             console.error(`Erro ao buscar itens de ${page}:`, error)
+            this.showNotification(`Erro ao buscar itens de ${page}`, 'error');
+       }
     }
 
    formatDateForInput(dateString) {
-        if (!dateString) return '';
+         if (!dateString) return '';
         const date = new Date(dateString);
-         const year = date.getFullYear();
-       const month = (date.getMonth() + 1).toString().padStart(2, '0');
+       const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const day = date.getDate().toString().padStart(2, '0');
-       return `${year}-${month}-${day}`;
+        return `${year}-${month}-${day}`;
     }
 
+
     async updateItem(resource, itemId, data) {
-       try {
+        try {
             const response = await this.makeRequest(`/${resource}/${itemId}`, {
-                 method: 'PUT',
-                body: JSON.stringify(data)
+                method: 'PUT',
+               body: JSON.stringify(data)
             });
 
-           const responseData = await response.json();
+            const responseData = await response.json();
 
             if (!response.ok) {
-              throw new Error(responseData.error || `Erro ao atualizar ${resource}.`);
+                throw new Error(responseData.error || `Erro ao atualizar ${resource}.`);
             }
 
             this.showNotification(`${resource.charAt(0).toUpperCase() + resource.slice(1)} atualizado(a) com sucesso!`, 'success');
             this.closeModal();
             this.loadPage(this.currentPage);
            return responseData;
-       } catch (error) {
+        } catch (error) {
            console.error(`Erro ao atualizar ${resource}:`, error);
             this.showNotification(error.message, 'error');
-       }
+        }
     }
 
     showProcessingPaymentOverlay() {
         const overlay = document.getElementById('processingPaymentOverlay');
         if(overlay) overlay.style.display = 'flex';
       }
-    
+   
     hideProcessingPaymentOverlay() {
-        const overlay = document.getElementById('processingPaymentOverlay');
-         if(overlay) overlay.style.display = 'none';
+       const overlay = document.getElementById('processingPaymentOverlay');
+        if(overlay) overlay.style.display = 'none';
+    }
+    
+     showConfirmationModal(title, message){
+        const modal = document.getElementById('confirmationModal');
+          if(modal){
+             modal.style.display = 'flex';
+           const modalTitle = modal.querySelector('#confirmationModalLabel');
+            const modalBody = modal.querySelector('.modal-body p');
+          if(modalTitle) modalTitle.textContent = title;
+           if(modalBody) modalBody.textContent = message;
+          const button = document.createElement('button');
+           button.textContent = 'Nova Inscrição';
+          button.className = 'btn';
+           button.onclick = () => {
+            this.hideConfirmationModal();
+          };
+          modal.querySelector('.modal-body').appendChild(button);
+        }
+    }
+
+     hideConfirmationModal() {
+        const modal = document.getElementById('confirmationModal');
+       if (modal) {
+            modal.style.display = 'none';
+            const modalBody = modal.querySelector('.modal-body');
+            const existingButton = modalBody.querySelector('.btn');
+             if (existingButton) {
+                 modalBody.removeChild(existingButton);
+            }
+        }
     }
 }
