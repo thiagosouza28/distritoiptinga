@@ -137,7 +137,7 @@ export class Participantes {
                         nome: formData.get('nome'),
                         email: formData.get('email'),
                         nascimento: formData.get('nascimento'),
-                        id_igreja: selectedIgrejaId,
+                        igreja: selectedIgrejaId,
                         igreja: selectIgreja.options[selectIgreja.selectedIndex].text
                     };
 
@@ -178,16 +178,16 @@ export class Participantes {
                     if (isAdmin) {
                        igrejas.forEach(igreja => {
                            const option = document.createElement('option');
-                             option.value = igreja._id.$oid;
-                           option.text = igreja.nome;
+                             option.value = igreja.igreja;
+                           option.text = igreja.igreja;
                             selectIgreja.appendChild(option);
                         });
                    } else if (userIgreja) {
-                        const userChurchData = igrejas.find(igreja => igreja._id.$oid === userIgreja);
+                        const userChurchData = igrejas.find(igreja => igreja.igreja === userIgreja);
                        if(userChurchData){
                              const option = document.createElement('option');
-                           option.value = userChurchData._id.$oid;
-                            option.text = userChurchData.nome;
+                           option.value = userChurchData.igreja;
+                            option.text = userChurchData.igreja;
                             selectIgreja.appendChild(option);
                        } else {
                            const option = document.createElement('option');
@@ -198,8 +198,8 @@ export class Participantes {
                     } else {
                        igrejas.forEach(igreja => {
                            const option = document.createElement('option');
-                             option.value = igreja._id.$oid;
-                            option.text = igreja.nome;
+                             option.value = igreja.igreja;
+                            option.text = igreja.igreja;
                             selectIgreja.appendChild(option);
                         });
                     }
