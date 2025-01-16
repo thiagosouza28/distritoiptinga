@@ -30,7 +30,7 @@ export class Participantes {
                             <tr>
                                 <td>${participante.id_participante}</td>
                                 <td>${participante.nome}</td>
-                                <td>${this.dashboard.formatDate(new Date(participante.nascimento))}</td>
+                                <td>${participante.nascimento ? this.dashboard.formatDate(new Date(participante.nascimento))}</td>
                                 <td>${participante.idade}</td>
                                 <td>${participante.igreja || 'N/A'}</td>
                                 <td>${participante.data_inscricao ? this.dashboard.formatDate(new Date(participante.data_inscricao)) : 'Pendente'}</td>
