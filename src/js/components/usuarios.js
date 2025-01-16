@@ -86,8 +86,8 @@ export class Usuarios {
                 const user = await this.dashboard.fetchItem('usuarios', itemId);
                 const igrejas = await this.dashboard.fetchItem('igrejas');
                 const options = igrejas.map(igreja => {
-                    const isSelected = user.id_igreja && user.id_igreja.$oid === igreja._id.$oid;
-                    return `<option value="${igreja._id.$oid}" ${isSelected ? 'selected' : ''}>${igreja.nome}</option>`;
+                    const isSelected = user.igreja && user.igreja === igreja.igreja;
+                    return `<option value="${igreja.igreja}" ${isSelected ? 'selected' : ''}>${igreja.igreja}</option>`;
                 }).join('');
 
                 html = `
@@ -153,7 +153,7 @@ export class Usuarios {
                         email: formData.get('email'),
                         cargo: formData.get('cargo'),
                         nascimento: formData.get('nascimento'),
-                        id_igreja: selectedIgrejaId,
+                        igreja: selectedIgrejaId,
                         igreja: selectIgreja.options[selectIgreja.selectedIndex].text
                     };
 
@@ -196,8 +196,8 @@ export class Usuarios {
                 if (selectIgreja) {
                     igrejas.forEach(igreja => {
                         const option = document.createElement('option');
-                        option.value = igreja._id.$oid;
-                        option.text = igreja.nome;
+                        option.value = igreja.igreja;
+                        option.text = igreja.igreja;
                         selectIgreja.appendChild(option);
                     });
                 }
