@@ -54,8 +54,8 @@ export class Participantes {
     }
 
     async renderParticipanteModalContent(itemId = null) {
-        const isAdmin = this.dashboard.userRole === 'administrador';
-        const userIgreja = this.dashboard.userChurch;
+         const isAdmin = this.dashboard.userRole === 'administrador';
+         const userIgreja = this.dashboard.userChurch;
 
         let html = `
             <form id="participanteForm">
@@ -71,103 +71,158 @@ export class Participantes {
                     <label for="nascimento">Data de Nascimento:</label>
                     <input type="date" id="nascimento" name="nascimento" required>
                 </div>
-                <div class="input-group">
+               <div class="input-group">
                     <label for="igreja">Igreja:</label>
                     <select id="igreja" name="igreja" required>
                         <option value="">Selecione uma Igreja</option>
-                    </select>
+                   </select>
                 </div>
-                <button type="submit" class="btn-submit">${itemId ? 'Salvar' : 'Adicionar'} Participante</button>
+                 <button type="submit" class="btn-submit">${itemId ? 'Salvar' : 'Adicionar'} Participante</button>
             </form>`;
 
+
         if (itemId) {
-            try {
-                const participante = await this.dashboard.fetchItem('participantes', itemId);
-                const igrejas = await this.dashboard.fetchItem('igrejas');
+             try {
+                 const participante = await this.dashboard.fetchItem('participantes', itemId);
+                 const igrejas = await this.dashboard.fetchItem('igrejas');
                 const options = igrejas.map(igreja => {
-                    const isSelected = participante.id_igreja && participante.id_igreja === igreja._id.$oid;
-                    return `<option value="${igreja._id.$oid}" ${isSelected ? 'selected' : ''}>${igreja.nome}</option>`;
+                     const isSelected = participante.id_igreja && participante.id_igreja === igreja._id.$oid;
+                     return `<option value="${igreja._id.$oid}" ${isSelected ? 'selected' : ''}>${igreja.nome}</option>`;
                 }).join('');
 
                 html = `
-                    <form id="participanteForm">
+                   <form id="participanteForm">
                         <div class="input-group">
                             <label for="nome">Nome:</label>
-                            <input type="text" id="nome" name="nome" value="${participante.nome}" required>
+                             <input type="text" id="nome" name="nome" value="${participante.nome}" required>
                         </div>
                         <div class="input-group">
                             <label for="email">Email:</label>
-                            <input type="email" id="email" name="email" value="${participante.email}" required>
-                        </div>
+                           <input type="email" id="email" name="email" value="${participante.email}" required>
+                       </div>
                         <div class="input-group">
                             <label for="nascimento">Data de Nascimento:</label>
-                            <input type="date" id="nascimento" name="nascimento" value="${participante.nascimento ? this.dashboard.formatDateForInput(participante.nascimento) : ''}" required>
-                        </div>
+                             <input type="date" id="nascimento" name="nascimento" value="${participante.nascimento ? this.dashboard.formatDateForInput(participante.nascimento) : ''}" required>
+                         </div>
                         <div class="input-group">
                             <label for="igreja">Igreja:</label>
-                            <select id="igreja" name="igreja" required>
+                           <select id="igreja" name="igreja" required>
                                 ${options}
                             </select>
-                        </div>
-                        <button type="submit" class="btn-submit">Salvar Participante</button>
-                    </form>`;
+                       </div>
+                       <button type="submit" class="btn-submit">Salvar Participante</button>
+                  </form>
+               `;
             } catch (error) {
-                console.error('Erro ao carregar participante para edição:', error);
+                 console.error('Erro ao carregar participante para edição:', error);
                 this.dashboard.showNotification('Erro ao carregar participante para edição', 'error');
-            }
-        }
+           }
+       }
 
         setTimeout(async () => {
             const form = document.getElementById('participanteForm');
-            if (form) {
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
+           if (form) {
+               form.addEventListener('submit', async (e) => {
+                   e.preventDefault();
                     const selectIgreja = document.getElementById('igreja');
                     const selectedIgrejaId = selectIgreja.value;
                     const formData = new FormData(form);
 
+
                     if (!selectedIgrejaId) {
                         this.dashboard.showNotification('Por favor, selecione uma igreja.', 'error');
                         return;
-                    }
+                   }
 
                     const data = {
-                        nome: formData.get('nome'),
-                        email: formData.get('email'),
-                        nascimento: formData.get('nascimento'),
-                        igreja: selectedIgrejaId,
+                         nome: formData.get('nome'),
+                         email: formData.get('email'),
+                         nascimento: formData.get('nascimento'),
+                         igreja: selectedIgrejaId,
                         igreja: selectIgreja.options[selectIgreja.selectedIndex].text,
-                    };
+                   };
 
                     try {
                         let method = 'POST';
-                        let url = '/participantes';
+                       let url = '/participantes';
                         if (itemId) {
-                            method = 'PUT';
+                           method = 'PUT';
                             url += `/${itemId}`;
                         }
 
-                        const response = await this.dashboard.makeRequest(url, {
-                            method,
+                       const response = await this.dashboard.makeRequest(url, {
+                           method,
                             body: JSON.stringify(data)
-                        });
+                       });
 
-                        if (response.ok) {
-                            this.dashboard.showNotification(`Participante ${itemId ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
+                       if (response.ok) {
+                           this.dashboard.showNotification(`Participante ${itemId ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
                             this.dashboard.closeModal();
-                            await this.dashboard.loadPage('participantes');
+                           await this.dashboard.loadPage('participantes');
                         } else {
                             const errorData = await response.json();
                             this.dashboard.showNotification(`Erro ao ${itemId ? 'atualizar' : 'adicionar'} participante: ${errorData.message || 'Erro Desconhecido'}`, 'error');
-                        }
-                    } catch (error) {
+                       }
+                   } catch (error) {
                         console.error(`Erro ao ${itemId ? 'atualizar' : 'adicionar'} participante:`, error);
-                        this.dashboard.showNotification(`Erro ao ${itemId ? 'atualizar' : 'adicionar'} participante: ${error.message || 'Erro Desconhecido'}`, 'error');
-                    }
-                });
+                       this.dashboard.showNotification(`Erro ao ${itemId ? 'atualizar' : 'adicionar'} participante: ${error.message || 'Erro Desconhecido'}`, 'error');
+                   }
+               });
+           }
+             try {
+                 const selectIgreja = document.getElementById('igreja');
+                if (selectIgreja) {
+                     if (isAdmin) {
+                         // Carrega todas as igrejas para o administrador
+                        const igrejas = await this.dashboard.fetchItem('igrejas');
+                         igrejas.forEach(igreja => {
+                             const option = document.createElement('option');
+                             option.value = igreja.igreja;
+                             option.text = igreja.igreja;
+                           selectIgreja.appendChild(option);
+                         });
+                   } else if (userIgreja) {
+                      // Carrega apenas a igreja do usuário responsável
+                      const igrejas = await this.dashboard.fetchItem('igrejas');
+                         const userChurchData = igrejas.find(igreja => igreja.igreja === userIgreja);
+                        if(userChurchData){
+                           const option = document.createElement('option');
+                            option.value = userChurchData.igreja;
+                             option.text = userChurchData.igreja;
+                            selectIgreja.appendChild(option);
+                       } else {
+                             const option = document.createElement('option');
+                            option.value = userIgreja;
+                            option.text = userIgreja;
+                           selectIgreja.appendChild(option);
+                        }
+                  } else {
+                        const igrejas = await this.dashboard.fetchItem('igrejas');
+                        igrejas.forEach(igreja => {
+                           const option = document.createElement('option');
+                            option.value = igreja.igreja;
+                            option.text = igreja.igreja;
+                           selectIgreja.appendChild(option);
+                        });
+                   }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar igrejas:', error);
+                this.dashboard.showNotification('Erro ao carregar igrejas', 'error');
             }
         }, 0);
 
         return html;
+    }
+
+
+   showProcessingPaymentOverlay() {
+        const overlay = document.getElementById('processingPaymentOverlay');
+        if(overlay) overlay.style.display = 'flex';
+    }
+
+    hideProcessingPaymentOverlay() {
+        const overlay = document.getElementById('processingPaymentOverlay');
+        if(overlay) overlay.style.display = 'none';
     }
 }
