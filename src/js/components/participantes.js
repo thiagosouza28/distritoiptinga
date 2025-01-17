@@ -194,18 +194,18 @@ export class Participantes {
                        const igrejas = await this.dashboard.fetchItem('igrejas');
                        igrejas.forEach(igreja => {
                            const option = document.createElement('option');
-                           option.value = igreja._id.$oid;
-                            option.text = igreja.nome;
+                           option.value = igreja.igreja;
+                            option.text = igreja.igreja;
                             selectIgreja.appendChild(option);
                         });
                     } else if (userIgreja) {
                          // Carrega apenas a igreja do usuário responsável
                          const igrejas = await this.dashboard.fetchItem('igrejas');
-                         const userChurchData = igrejas.find(igreja => igreja._id.$oid === userIgreja);
+                         const userChurchData = igrejas.find(igreja => igreja.igreja === userIgreja);
                        if (userChurchData) {
                              const option = document.createElement('option');
-                            option.value = userChurchData._id.$oid;
-                            option.text = userChurchData.nome;
+                            option.value = userChurchData.igreja;
+                            option.text = userChurchData.igreja;
                              selectIgreja.appendChild(option);
                         } else {
                             const option = document.createElement('option');
@@ -217,8 +217,8 @@ export class Participantes {
                         const igrejas = await this.dashboard.fetchItem('igrejas');
                         igrejas.forEach(igreja => {
                             const option = document.createElement('option');
-                           option.value = igreja._id.$oid;
-                           option.text = igreja.nome;
+                           option.value = igreja.igreja;
+                           option.text = igreja.igreja;
                             selectIgreja.appendChild(option);
                        });
                     }
