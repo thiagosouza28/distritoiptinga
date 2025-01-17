@@ -49,29 +49,31 @@ export class Participantes {
     }
 
       renderParticipanteRow(participante) {
-        return `
-            <tr>
-                <td>${participante.id_participante}</td>
-                <td>${participante.nome}</td>
-                <td>${participante.nascimento ? this.dashboard.formatDate(participante.nascimento) : 'N/A'}</td>
-                <td>${participante.idade}</td>
-                <td>${participante.igreja || 'N/A'}</td>
-                <td>${participante.data_inscricao ? this.dashboard.formatDate(participante.data_inscricao) : 'Pendente'}</td>
-               <td>${participante.data_confirmacao ? this.dashboard.formatDate(participante.data_confirmacao) : 'Pendente'}</td>
-                <td class="actions">
-                   <button onclick="dashboard.openModal('participante', '${participante.id_participante}')" class="btn-edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="dashboard.deleteItem('participantes', '${participante.id_participante}')" class="btn-delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                     <button onclick="dashboard.showProcessingPaymentOverlay();dashboard.toggleConfirmPayment('${participante.id_participante}');dashboard.hideProcessingPaymentOverlay();" class="btn-confirm ${participante.data_confirmacao ? 'confirmed' : ''}">
-                        <i class="fas fa-check"></i> ${participante.data_confirmacao ? 'Pago' : 'Confirmar Pagamento'}
-                   </button>
-                </td>
-            </tr>
-        `;
-    }
+    return `
+        <tr>
+            <td>${participante.id_participante}</td>
+            <td>${participante.nome}</td>
+            <td>${participante.nascimento ? this.dashboard.formatDate(participante.nascimento) : 'N/A'}</td>
+            <td>${participante.idade || 'N/A'}</td>
+            <td>${participante.igreja || 'N/A'}</td>
+            <td>${participante.data_inscricao ? this.dashboard.formatDate(participante.data_inscricao) : 'Pendente'}</td>
+            <td>${participante.data_confirmacao ? this.dashboard.formatDate(participante.data_confirmacao) : 'Pendente'}</td>
+            <td class="actions">
+                <button onclick="dashboard.openModal('participante', '${participante.id_participante}')" class="btn-edit">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="dashboard.deleteItem('participantes', '${participante.id_participante}')" class="btn-delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button onclick="dashboard.showProcessingPaymentOverlay(); dashboard.toggleConfirmPayment('${participante.id_participante}'); dashboard.hideProcessingPaymentOverlay();" 
+                    class="btn-confirm ${participante.data_confirmacao ? 'confirmed' : ''}">
+                    <i class="fas fa-check"></i> ${participante.data_confirmacao ? 'Pago' : 'Confirmar Pagamento'}
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
 
 
    filterParticipantes(data) {
