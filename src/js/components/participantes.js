@@ -7,7 +7,7 @@ export class Participantes {
 
     renderParticipantes(data) {
          const igrejasOptions = this.dashboard.igrejasData
-            ? this.dashboard.igrejasData.map(igreja => `<option value="${igreja.nome}">${igreja.nome}</option>`).join('')
+            ? this.dashboard.igrejasData.map(igreja => `<option value="${igreja.igreja}">${igreja.igreja}</option>`).join('')
             : '<option value="">Nenhuma igreja carregada</option>';
         return `
             <div class="page-header">
@@ -119,8 +119,8 @@ export class Participantes {
                  const participante = await this.dashboard.fetchItem('participantes', itemId);
                 const igrejas = await this.dashboard.fetchItem('igrejas');
                const options = igrejas.map(igreja => {
-                    const isSelected = participante.igreja && participante.igreja === igreja._id.$oid;
-                     return `<option value="${igreja._id.$oid}" ${isSelected ? 'selected' : ''}>${igreja.nome}</option>`;
+                    const isSelected = participante.igreja && participante.igreja === igreja.igreja;
+                     return `<option value="${igreja.igreja}" ${isSelected ? 'selected' : ''}>${igreja.igreja}</option>`;
                 }).join('');
 
                 html = `
