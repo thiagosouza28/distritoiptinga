@@ -7,7 +7,7 @@ export class Participantes {
 
     renderParticipantes(data) {
          const igrejasOptions = this.dashboard.igrejasData
-            ? this.dashboard.igrejasData.map(igreja => `<option value="${igreja.nome}">${igreja.nome}</option>`).join('')
+            ? this.dashboard.igrejasData.map(igreja => `<option value="${igreja.igreja}">${igreja.igreja}</option>`).join('')
             : '<option value="">Nenhuma igreja carregada</option>';
         return `
             <div class="page-header">
