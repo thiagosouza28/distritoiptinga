@@ -96,7 +96,7 @@ export class Participantes {
                 const participante = await this.dashboard.fetchItem('participantes', itemId);
                 const igrejas = await this.dashboard.fetchItems('igrejas'); // fetchItems instead of fetchItem
 
-                const options = igrejas.map(igreja => `<option value="${igreja._id}" ${participante.igreja && participante.igreja._id === igreja._id ? 'selected' : ''}>${igreja.nome}</option>`).join('');
+                const options = igrejas.map(igreja => `<option value="${igreja.igreja}" ${participante.igreja && participante.igreja.igreja === igreja.igreja ? 'selected' : ''}>${igreja.igreja}</option>`).join('');
 
                 html = `
                     <form id="participanteForm">
