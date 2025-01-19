@@ -145,49 +145,50 @@ export default class Dashboard {
     }
 
     async loadPage(page) {
-        try {
-            this.showLoading();
-            let endpoint = `/${page}`;
-            let queryParams = {};
+    try {
+        this.showLoading();
+        let endpoint = `/${page}`;
+        let queryParams = {};
 
-            // Carrega as igrejas se a página for de transações
-            if (page === 'transacoes') {
-                try {
-                    this.igrejasData = await this.fetchItems('igrejas');
-                } catch (error) {
-                    console.error('Erro ao carregar igrejas:', error);
-                    this.showNotification('Erro ao carregar lista de igrejas', 'error');
-                    return;
-                }
+        // Carrega as igrejas se a página for de transações
+        if (page === 'transacoes') {
+            try {
+                this.igrejasData = await this.fetchItems('igrejas');
+            } catch (error) {
+                console.error('Erro ao carregar igrejas:', error);
+                this.showNotification('Erro ao carregar lista de igrejas', 'error');
+                return;
             }
-
-            if (this.userRole === 'diretor_jovem' && page === 'participantes') {
-                queryParams = {
-                    igreja: this.userChurch,
-                    usuario: this.userId
-                };
-                endpoint += '?' + new URLSearchParams(queryParams).toString();
-            }
-
-            const response = await this.makeRequest(endpoint);
-            if (response.ok) {
-                const data = await response.json();
-                 if (page === 'transacoes') {
-                   this.renderPage(page, data, this.igrejasData);
-                 } else {
-                   this.renderPage(page, data);
-                }
-            } else {
-                const errorData = await response.json();
-                throw new Error(`Erro na requisição para ${endpoint}: ${errorData.message || 'Erro Desconhecido'}`);
-            }
-        } catch (error) {
-            console.error(`Erro ao carregar a página ${page}:`, error);
-            this.showNotification(`Erro ao carregar a página ${page}`, 'error');
-        } finally {
-            this.hideLoading();
         }
+
+        if (this.userRole === 'diretor_jovem' && page === 'participantes') {
+            queryParams = {
+                igreja: this.userChurch,
+                usuario: this.userId
+            };
+            endpoint += '?' + new URLSearchParams(queryParams).toString();
+        }
+
+        const response = await this.makeRequest(endpoint);
+
+        // Verifica se a resposta é um objeto válido
+        if (response && typeof response.json === 'function') {
+            const data = await response.json();
+            if (page === 'transacoes' && typeof data === 'object' && data.transactions && Array.isArray(data.transactions)) {
+                this.renderPage(page, data.transactions, this.igrejasData);
+            } else {
+                this.renderPage(page, data);
+            }
+        } else {
+            throw new Error('Resposta da API inválida ou vazia.');
+        }
+    } catch (error) {
+        console.error(`Erro ao carregar a página ${page}:`, error);
+        this.showNotification(`Erro ao carregar a página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
+    } finally {
+        this.hideLoading();
     }
+}
 
     renderPage(page, data, igrejasData = null) {
         let html;
@@ -221,20 +222,21 @@ export default class Dashboard {
                 'Content-Type': 'application/json'
             }
         };
-    
+
         let url = `${this.baseUrl}${endpoint}`;
         if (options.params) {
             const queryParams = new URLSearchParams(options.params).toString();
             url += `?${queryParams}`;
         }
-    
+
         try {
             const response = await fetch(url, {
                 ...defaultOptions,
                 ...options,
                 body: options.body ? JSON.stringify(options.body) : null
             });
-    
+
+            // Verifica se a resposta está OK, mas também lida com respostas vazias ou não-JSON
             if (!response.ok) {
                 let errorMsg = `Erro na requisição para ${url}: Status ${response.status}`;
                 try {
@@ -245,13 +247,19 @@ export default class Dashboard {
                 }
                 throw new Error(errorMsg);
             }
-    
-            // Verifica se a resposta tem conteúdo antes de tentar fazer o parse
+
+            // Trata respostas sem conteúdo (204 No Content) como bem-sucedidas, mas com corpo vazio
+            if (response.status === 204) {
+                return response;
+            }
+
+            // Verifica se a resposta é JSON antes de tentar fazer o parse
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.includes("application/json")) {
                 return await response.json();
             } else {
-                return null; // Retorna null se a resposta não for JSON
+                // Retorna a resposta bruta se não for JSON
+                return response;
             }
         } catch (error) {
             console.error(`Erro na requisição para ${url}:`, error);
