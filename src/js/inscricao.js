@@ -81,7 +81,7 @@ document.getElementById('inscricaoForm').addEventListener('submit', async functi
 
      showProcessingOverlay();
     try {
-        const response = await fetch('https://api-ckry.onrender.com/api/participantes/public', {
+        const response = await fetch('https://api-ckry.onrender.com/api/participantes/inscricao', {
             method: 'POST',
            headers: {
                 'Content-Type': 'application/json',
