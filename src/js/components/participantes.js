@@ -157,7 +157,7 @@ export class Participantes {
                 if (selectIgreja) {
                     igrejas.forEach(igreja => {
                         const option = document.createElement('option');
-                        option.value = igreja._id; // Use the _id
+                        option.value = igreja.igreja; // Use the _id
                         option.text = igreja.igreja; // Use the nome
                         selectIgreja.appendChild(option);
                     });
