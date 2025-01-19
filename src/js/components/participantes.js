@@ -36,7 +36,7 @@ export class Participantes {
                                 <td>${this.dashboard.calculateAge(participante.nascimento)}</td>
                                 <td>${participante.id_usuario ? participante.id_usuario.nome : 'N/A'}</td>
                                 <td>${participante.id_usuario ? participante.id_usuario.email : 'N/A'}</td>
-                                <td>${participante.id_igreja ? participante.id_igreja.nome : 'N/A'}</td>
+                                <td>${participante.igreja ? participante.igreja.igreja : 'N/A'}</td>
                                 <td>${participante.data_inscricao ? this.dashboard.formatDate(participante.data_inscricao) : 'N/A'}</td>
                                 <td>${participante.data_confirmacao ? this.dashboard.formatDate(participante.data_confirmacao) : 'Pendente'}</td>
                                 <td class="actions">
@@ -85,8 +85,8 @@ export class Participantes {
                 const participante = await this.dashboard.fetchItem('participantes', itemId);
                 const igrejas = await this.dashboard.fetchItem('igrejas');
                 const options = igrejas.map(igreja => {
-                    const isSelected = participante.id_igreja && participante.id_igreja.$oid === igreja._id.$oid;
-                    return `<option value="${igreja._id.$oid}" ${isSelected ? 'selected' : ''}>${igreja.nome}</option>`;
+                    const isSelected = participante.igreja && participante.igreja === igreja.igreja;
+                    return `<option value="${igreja.igreja}" ${isSelected ? 'selected' : ''}>${igreja.igreja}</option>`;
                 }).join('');
 
                 html = `
@@ -136,7 +136,7 @@ export class Participantes {
                         nome: formData.get('nome'),
                         email: formData.get('email'),
                         nascimento: formData.get('nascimento'),
-                        id_igreja: selectedIgrejaId,
+                        igreja: selectedIgrejaId,
                         igreja: selectIgreja.options[selectIgreja.selectedIndex].text,
                         idade: this.dashboard.calculateAge(formData.get('nascimento')),
                         id_usuario: this.dashboard.userId
@@ -177,8 +177,8 @@ export class Participantes {
                 if (selectIgreja) {
                     igrejas.forEach(igreja => {
                         const option = document.createElement('option');
-                        option.value = igreja._id.$oid;
-                        option.text = igreja.nome;
+                        option.value = igreja.igreja;
+                        option.text = igreja.igreja;
                         selectIgreja.appendChild(option);
                     });
                 }
