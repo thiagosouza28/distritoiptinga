@@ -26,14 +26,14 @@ export class Participantes {
                         </tr>
                     </thead>
                     <tbody>
-                        ${data.map(participante => {
-                            const dataNascimento = participante.nascimento ? new Date(participante.nascimento) : null;
-                            const dataFormatada = dataNascimento 
-                                ? `${dataNascimento.getDate().toString().padStart(2, '0')}/${(dataNascimento.getMonth() + 1).toString().padStart(2, '0')}/${dataNascimento.getFullYear()}`
-                                : 'N/A';
-                            const idade = dataNascimento ? this.dashboard.calculateAge(dataNascimento) : 'N/A';
+dd/mm/aaaa: ${data.map(participante => {
+    const dataNascimento = participante.nascimento ? new Date(participante.nascimento) : null;
+    const dataFormatada = dataNascimento 
+        ? `${dataNascimento.getDate().toString().padStart(2, '0')}/${(dataNascimento.getMonth() + 1).toString().padStart(2, '0')}/${dataNascimento.getFullYear()}`
+        : 'N/A';
+    const idade = dataNascimento ? this.dashboard.calculateAge(dataNascimento) : 'N/A';
 
-                            return `
+    return {
                                 <tr>
                                     <td>${participante.id_participante || 'N/A'}</td>
                                     <td>${participante.nome}</td>
