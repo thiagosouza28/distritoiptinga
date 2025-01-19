@@ -1,112 +1,104 @@
-document.addEventListener('DOMContentLoaded', function() {
-    carregarIgrejas();
-});
+document.addEventListener('DOMContentLoaded', carregarIgrejas);
 
 async function carregarIgrejas() {
+    const selectIgreja = document.getElementById('igreja');
+    if (!selectIgreja) {
+        console.error("Erro: Elemento select com id 'igreja' não encontrado no DOM.");
+        exibirNotificacao('Erro ao carregar igrejas. Elemento select não encontrado.', 'error');
+        return;
+    }
+
     try {
-        console.log("Iniciando carregarIgrejas");
         const response = await fetch('https://api-ckry.onrender.com/api/igrejas');
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Erro ao carregar igrejas. Verifique a conexão com o servidor.');
         }
         const igrejas = await response.json();
-        const selectIgreja = document.getElementById('igreja');
-        console.log("Elemento selectIgreja:", selectIgreja);
+        selectIgreja.innerHTML = '<option value="">Selecione uma Igreja</option>'; // Limpa o select antes de adicionar novas opções
 
-        if (!selectIgreja) {
-            console.error("Erro: Elemento select com id 'igreja' não encontrado no DOM.");
-            exibirNotificacao('Erro ao carregar igrejas. Elemento select não encontrado.', 'error');
-            return;
-        }
-
-        selectIgreja.innerHTML = '<option value="">Selecione uma Igreja</option>';
-        igrejas.forEach(igreja => {
+        igrejas.forEach(igreja => { // Assumindo que a API retorna um array de objetos com um campo 'nome'
             const option = document.createElement('option');
-            option.value = igreja.igreja;
-            option.text = igreja.igreja;
-             selectIgreja.appendChild(option);
-       });
+            option.value = igreja._id; // Use o ID da igreja, não o nome
+            option.text = igreja.nome; // Use o nome da igreja, não o ID
+            selectIgreja.appendChild(option);
+        });
         console.log("Igrejas carregadas com sucesso!");
     } catch (error) {
         console.error('Erro ao carregar igrejas:', error);
-         exibirNotificacao(error.message, 'error');
+        exibirNotificacao(error.message, 'error');
     }
 }
 
-document.getElementById('inscricaoForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+
+document.getElementById('inscricaoForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
 
     const formData = new FormData(this);
     const data = {
         nome: formData.get('nome'),
         email: formData.get('email'),
-       nascimento: formData.get('nascimento'),
-         igreja: formData.get('igreja')
+        nascimento: formData.get('nascimento'),
+        igreja: formData.get('igreja')
     };
 
-    const emailInput = document.getElementById('email');
-    const emailValue = emailInput.value;
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-
-    if (!emailRegex.test(emailValue)) {
-         exibirNotificacao('Por favor, insira um email válido.', 'error');
-       return;
+    // Validação do email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regex mais simples e eficaz
+    if (!emailRegex.test(data.email)) {
+        exibirNotificacao('Por favor, insira um email válido.', 'error');
+        return;
     }
 
-     const nascimentoInput = document.getElementById('nascimento');
-   const nascimentoValue = nascimentoInput.value;
-    const nascimento = new Date(nascimentoValue);
-
-     if (isNaN(nascimento.getTime())) {
+    // Validação da data de nascimento
+    const nascimento = new Date(data.nascimento);
+    if (isNaN(nascimento.getTime())) {
         exibirNotificacao('Data de nascimento inválida.', 'error');
-         return;
+        return;
     }
 
-     const hoje = new Date();
-     let idade = hoje.getFullYear() - nascimento.getFullYear();
-     const m = hoje.getMonth() - nascimento.getMonth();
+    // Cálculo da idade
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const m = hoje.getMonth() - nascimento.getMonth();
     if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
         idade--;
     }
 
-   if (idade < 10) {
-        exibirNotificacao('Inscrição realizada com sucesso!\nParticipante: Menor de 10 anos.', 'success');
-        document.getElementById('inscricaoForm').reset();
+    // Mensagem de menor de idade (ajuste a idade conforme necessário)
+    if (idade < 18) {
+        exibirNotificacao('Inscrição realizada com sucesso!\nParticipante: Menor de 18 anos.', 'success');
+        this.reset();
         carregarIgrejas();
-         exibirModalDeConfirmacao();
-         return;
-   }
+        exibirModalDeConfirmacao();
+        return;
+    }
 
-
-     showProcessingOverlay();
+    showProcessingOverlay();
     try {
         const response = await fetch('https://api-ckry.onrender.com/api/participantes/inscricao', {
             method: 'POST',
-           headers: {
+            headers: {
                 'Content-Type': 'application/json',
-           },
+            },
             body: JSON.stringify(data)
         });
 
-
-       if (!response.ok) {
-           const errorData = await response.json();
+        if (!response.ok) {
+            const errorData = await response.json();
             throw new Error(errorData.message || 'Erro ao realizar inscrição. Verifique os dados inseridos.');
         }
 
-
-       const result = await response.json();
+        const result = await response.json();
         console.log('Success:', result);
         exibirNotificacao('Inscrição realizada com sucesso!', 'success');
-        document.getElementById('inscricaoForm').reset();
+        this.reset();
         carregarIgrejas();
-       exibirModalDeConfirmacao();
+        exibirModalDeConfirmacao();
     } catch (error) {
-       console.error('Error:', error);
-       exibirNotificacao(error.message, 'error');
+        console.error('Error:', error);
+        exibirNotificacao(error.message, 'error');
     } finally {
-       hideProcessingOverlay();
+        hideProcessingOverlay();
     }
 });
 
