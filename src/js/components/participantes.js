@@ -75,7 +75,24 @@ export class Participantes {
 }
 
 
+async handleFormSubmit(e, page, itemId = null) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
 
+    // Adiciona o id da igreja e o nome da igreja ao objeto de dados
+    const selectIgreja = form.querySelector('#igreja');
+    const selectedIgrejaId = selectIgreja.value;
+    if (selectedIgrejaId) {
+        data.igreja = selectedIgrejaId;
+        data.igreja = selectIgreja.options[selectIgreja.selectedIndex].text;
+    } else {
+        // Adiciona validação para garantir que uma igreja foi selecionada
+        this.showNotification('Por favor, selecione uma igreja.', 'error');
+        return; // Para a execução do método
+    }
+    
    filterParticipantes(data) {
         let filteredData = [...data];
 
