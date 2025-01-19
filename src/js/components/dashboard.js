@@ -1,3 +1,4 @@
+// No arquivo dashboard.js
 import { Usuarios } from './usuarios.js';
 import { Igrejas } from './igrejas.js';
 import { Participantes } from './participantes.js';
@@ -265,11 +266,16 @@ export default class Dashboard {
     }
 
     formatDate(date) {
-        return new Date(date).toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
+        if (!date) return 'Data Inválida';
+      
+        const formattedDate = new Date(date);
+        if (isNaN(formattedDate.getTime())) return 'Data Inválida';
+    
+        const day = formattedDate.getDate().toString().padStart(2, '0');
+        const month = (formattedDate.getMonth() + 1).toString().padStart(2, '0');
+        const year = formattedDate.getFullYear();
+    
+        return `${day}/${month}/${year}`;
     }
 
     formatCurrency(value) {
@@ -339,46 +345,46 @@ export default class Dashboard {
         this.modal.closeSettingsModal();
     }
 
-    async handleFormSubmit(e, page, itemId = null) {
+    async handleFormSubmit(e, page) {
         e.preventDefault();
         const form = e.target;
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
-
-        // Adiciona o id da igreja e o nome da igreja ao objeto de dados
         const selectIgreja = form.querySelector('#igreja');
-        if (selectIgreja) {
-            data.igreja = selectIgreja.value;
+        const selectedIgrejaId = selectIgreja.value;
+    
+        if (selectedIgrejaId) {
+            data.igreja = selectedIgrejaId;
             data.igreja = selectIgreja.options[selectIgreja.selectedIndex].text;
         }
-
+    
         try {
             let method = 'POST';
             let url = `/${page}`;
-            if (itemId) {
+            if (this.selectedItemId) {
                 method = 'PUT';
-                url += `/${itemId}`;
+                url += `/${this.selectedItemId}`;
             }
-
+    
             const response = await this.makeRequest(url, {
-                method,
+                method: method,
                 body: JSON.stringify(data)
             });
-
+    
             if (response.ok) {
-                this.showNotification(`Item ${itemId ? 'atualizado' : 'adicionado'} com sucesso na página ${page}!`, 'success');
+                this.showNotification(`Item ${this.selectedItemId ? 'atualizado' : 'adicionado'} com sucesso na página ${page}!`, 'success');
                 this.closeModal();
                 await this.loadPage(page);
             } else {
                 const errorData = await response.json();
-                this.showNotification(`Erro ao ${itemId ? 'atualizar' : 'adicionar'} item na página ${page}: ${errorData.message || 'Erro Desconhecido'}`, 'error');
+                this.showNotification(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}: ${errorData.message || 'Erro Desconhecido'}`, 'error');
             }
         } catch (error) {
-            console.error(`Erro ao ${itemId ? 'atualizar' : 'adicionar'} item na página ${page}:`, error);
-            this.showNotification(`Erro ao ${itemId ? 'atualizar' : 'adicionar'} item na página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
+            console.error(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}:`, error);
+            this.showNotification(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
         }
     }
-    
+
     async deleteItem(page, itemId) {
         if (!confirm(`Tem certeza que deseja excluir este item?`)) {
             return;
@@ -437,43 +443,5 @@ export default class Dashboard {
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const day = date.getDate().toString().padStart(2, '0');
         return `${year}-${month}-${day}`;
-    }
-
-    async confirmPayment(participanteId) {
-        try {
-            const response = await this.makeRequest(`/participantes/${participanteId}/confirmar-pagamento`, {
-                method: 'PUT'
-            });
-    
-            if (response.ok) {
-                this.showNotification('Pagamento do participante confirmado com sucesso!', 'success');
-                await this.loadPage('participantes');
-            } else {
-                const errorData = await response.json();
-                this.showNotification(`Erro ao confirmar pagamento: ${errorData.message || 'Erro Desconhecido'}`, 'error');
-            }
-        } catch (error) {
-            console.error('Erro ao confirmar pagamento:', error);
-            this.showNotification('Erro ao confirmar pagamento', 'error');
-        }
-    }
-
-    async unconfirmPayment(participanteId) {
-        try {
-            const response = await this.makeRequest(`/participantes/${participanteId}/cancelar-confirmacao`, {
-                method: 'PUT'
-            });
-    
-            if (response.ok) {
-                this.showNotification('Confirmação de pagamento cancelada com sucesso!', 'success');
-                await this.loadPage('participantes');
-            } else {
-                const errorData = await response.json();
-                this.showNotification(`Erro ao cancelar confirmação de pagamento: ${errorData.message || 'Erro Desconhecido'}`, 'error');
-            }
-        } catch (error) {
-            console.error('Erro ao cancelar confirmação de pagamento:', error);
-            this.showNotification('Erro ao cancelar confirmação de pagamento', 'error');
-        }
     }
 }
