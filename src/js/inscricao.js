@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function carregarIgrejas() {
     try {
         console.log("Iniciando carregarIgrejas");
-        const response = await fetch('https://api-ckry.onrender.com/api/igrejas');
+        const response = await fetch('http://localhost:4000/api/igrejas');
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Erro ao carregar igrejas. Verifique a conexão com o servidor.');
@@ -81,7 +81,7 @@ document.getElementById('inscricaoForm').addEventListener('submit', async functi
 
      showProcessingOverlay();
     try {
-        const response = await fetch('https://api-ckry.onrender.com/api/participantes/inscricao', {
+        const response = await fetch('http://localhost:4000/api/participantes/inscricao', {
             method: 'POST',
            headers: {
                 'Content-Type': 'application/json',
