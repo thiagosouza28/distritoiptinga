@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     carregarIgrejas();
 });
 
@@ -25,24 +25,24 @@ async function carregarIgrejas() {
             const option = document.createElement('option');
             option.value = igreja.igreja;
             option.text = igreja.igreja;
-             selectIgreja.appendChild(option);
-       });
+            selectIgreja.appendChild(option);
+        });
         console.log("Igrejas carregadas com sucesso!");
     } catch (error) {
         console.error('Erro ao carregar igrejas:', error);
-         exibirNotificacao(error.message, 'error');
+        exibirNotificacao(error.message, 'error');
     }
 }
 
-document.getElementById('inscricaoForm').addEventListener('submit', async function(e) {
+document.getElementById('inscricaoForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const formData = new FormData(this);
     const data = {
         nome: formData.get('nome'),
         email: formData.get('email'),
-       nascimento: formData.get('nascimento'),
-         igreja: formData.get('igreja')
+        nascimento: formData.get('nascimento'),
+        igreja: formData.get('igreja')
     };
 
     const emailInput = document.getElementById('email');
@@ -50,109 +50,93 @@ document.getElementById('inscricaoForm').addEventListener('submit', async functi
     const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
     if (!emailRegex.test(emailValue)) {
-         exibirNotificacao('Por favor, insira um email válido.', 'error');
-       return;
+        exibirNotificacao('Por favor, insira um email válido.', 'error');
+        return;
     }
 
-     const nascimentoInput = document.getElementById('nascimento');
-   const nascimentoValue = nascimentoInput.value;
+    const nascimentoInput = document.getElementById('nascimento');
+    const nascimentoValue = nascimentoInput.value;
     const nascimento = new Date(nascimentoValue);
 
-     if (isNaN(nascimento.getTime())) {
+    if (isNaN(nascimento.getTime())) {
         exibirNotificacao('Data de nascimento inválida.', 'error');
-         return;
+        return;
     }
 
-     const hoje = new Date();
-     let idade = hoje.getFullYear() - nascimento.getFullYear();
-     const m = hoje.getMonth() - nascimento.getMonth();
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const m = hoje.getMonth() - nascimento.getMonth();
     if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
         idade--;
     }
 
-   if (idade < 10) {
-        exibirNotificacao('Inscrição realizada com sucesso!\nParticipante: Menor de 10 anos.', 'success');
-        document.getElementById('inscricaoForm').reset();
-        carregarIgrejas();
-         exibirModalDeConfirmacao();
-         return;
-   }
-
-
-     showProcessingOverlay();
+    showProcessingOverlay();
     try {
         const response = await fetch('https://api-ckry.onrender.com/api/participantes/inscricao', {
             method: 'POST',
-           headers: {
+            headers: {
                 'Content-Type': 'application/json',
-           },
+            },
             body: JSON.stringify(data)
         });
 
-
-       if (!response.ok) {
-           const errorData = await response.json();
+        if (!response.ok) {
+            const errorData = await response.json();
             throw new Error(errorData.message || 'Erro ao realizar inscrição. Verifique os dados inseridos.');
         }
 
-
-       const result = await response.json();
+        const result = await response.json();
         console.log('Success:', result);
         exibirNotificacao('Inscrição realizada com sucesso!', 'success');
         document.getElementById('inscricaoForm').reset();
         carregarIgrejas();
-       exibirModalDeConfirmacao();
+        exibirModalDeConfirmacao();
     } catch (error) {
-       console.error('Error:', error);
-       exibirNotificacao(error.message, 'error');
+        console.error('Error:', error);
+        exibirNotificacao(error.message, 'error');
     } finally {
-       hideProcessingOverlay();
+        hideProcessingOverlay();
     }
 });
 
-
 function exibirNotificacao(message, type = 'info') {
     const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-             <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
-           ${message}
-       `;
-      document.body.appendChild(notification);
-      setTimeout(() => notification.remove(), 3000);
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i> ${message}`;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
 }
-
 
 function showProcessingOverlay() {
     const overlay = document.getElementById('processingOverlay');
-        if(overlay) overlay.style.display = 'flex';
- }
+    if (overlay) overlay.style.display = 'flex';
+}
 
- function hideProcessingOverlay() {
+function hideProcessingOverlay() {
     const overlay = document.getElementById('processingOverlay');
-      if(overlay) overlay.style.display = 'none';
- }
+    if (overlay) overlay.style.display = 'none';
+}
 
- function exibirModalDeConfirmacao() {
-   const modal = document.getElementById('confirmationModal');
-     if (modal) modal.style.display = 'flex';
+function exibirModalDeConfirmacao() {
+    const modal = document.getElementById('confirmationModal');
+    if (modal) modal.style.display = 'flex';
     const button = document.createElement('button');
     button.textContent = 'Nova Inscrição';
     button.className = 'btn';
-       button.onclick = () => {
-            hideConfirmationModal();
-        };
-       modal.querySelector('.modal-body').appendChild(button);
+    button.onclick = () => {
+        hideConfirmationModal();
+    };
+    modal.querySelector('.modal-body').appendChild(button);
 }
 
 function hideConfirmationModal() {
     const modal = document.getElementById('confirmationModal');
     if (modal) {
-       modal.style.display = 'none';
-       const modalBody = modal.querySelector('.modal-body');
+        modal.style.display = 'none';
+        const modalBody = modal.querySelector('.modal-body');
         const existingButton = modalBody.querySelector('.btn');
-         if (existingButton) {
+        if (existingButton) {
             modalBody.removeChild(existingButton);
         }
-   }
+    }
 }
