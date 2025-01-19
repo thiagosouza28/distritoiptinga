@@ -9,7 +9,7 @@ import { Modal } from './modal.js';
 export default class Dashboard {
     constructor() {
         this.currentPage = 'usuarios';
-        this.baseUrl = 'http://localhost:4000/api';
+        this.baseUrl = 'https://api-ckry.onrender.com/api';
         this.userRole = null;
         this.userId = null;
         this.userChurch = null;
@@ -356,8 +356,7 @@ export default class Dashboard {
         if (selectIgreja) {
             const selectedIgrejaId = selectIgreja.value;
             if (selectedIgrejaId) {
-                data.id_igreja = selectedIgrejaId;
-                // Inclui também o nome da igreja, se necessário
+                data.igreja = selectedIgrejaId;
                 data.igreja = selectIgreja.options[selectIgreja.selectedIndex].text;
             }
         }
