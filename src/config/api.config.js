@@ -13,40 +13,50 @@ class ApiService {
             ...options.headers
         };
 
+        let url = `${this.baseUrl}${endpoint}`;
+
+        // Adiciona query parameters, se existirem
+        if (options.params) {
+            const queryParams = new URLSearchParams(options.params).toString();
+            url += `?${queryParams}`;
+        }
+
         try {
-            const response = await fetch(`${this.baseUrl}${endpoint}`, {
+            const response = await fetch(url, {
                 ...options,
-                headers
+                headers,
+                body: options.body ? JSON.stringify(options.body) : null
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Erro na requisição');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Erro na requisição para ${url}: ${response.status}`);
             }
 
-            return await response.json();
+            // Trata respostas vazias (204 No Content)
+            return response.status === 204 ? null : response.json();
         } catch (error) {
-            console.error('API Error:', error);
+            console.error('Erro na API:', error);
             throw error;
         }
     }
 
-    // Auth endpoints
+    // Autenticação
     async login(credentials) {
         return this.request('/auth/login', {
             method: 'POST',
-            body: JSON.stringify(credentials)
+            body: credentials
         });
     }
 
     async register(userData) {
         return this.request('/auth/register', {
             method: 'POST',
-            body: JSON.stringify(userData)
+            body: userData
         });
     }
 
-    // Users endpoints
+    // Usuários
     async getProfile() {
         return this.request('/users/profile');
     }
@@ -62,14 +72,14 @@ class ApiService {
     async createUser(userData) {
         return this.request('/users', {
             method: 'POST',
-            body: JSON.stringify(userData)
+            body: userData
         });
     }
 
     async updateUser(id, userData) {
         return this.request(`/users/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(userData)
+            body: userData
         });
     }
 
@@ -79,123 +89,108 @@ class ApiService {
         });
     }
 
-    // Districts endpoints
-    async getDistricts() {
-        return this.request('/districts');
-    }
+    // Distritos (removido, pois não é mais usado)
 
-    async getDistrict(id) {
-        return this.request(`/districts/${id}`);
-    }
-
-    async createDistrict(districtData) {
-        return this.request('/districts', {
-            method: 'POST',
-            body: JSON.stringify(districtData)
-        });
-    }
-
-    async updateDistrict(id, districtData) {
-        return this.request(`/districts/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(districtData)
-        });
-    }
-
-    async deleteDistrict(id) {
-        return this.request(`/districts/${id}`, {
-            method: 'DELETE'
-        });
-    }
-
-    // Churches endpoints
+    // Igrejas
     async getChurches() {
-        return this.request('/churches');
+        return this.request('/igrejas');
     }
 
     async getChurch(id) {
-        return this.request(`/churches/${id}`);
+        return this.request(`/igrejas/${id}`);
     }
 
     async createChurch(churchData) {
-        return this.request('/churches', {
+        return this.request('/igrejas', {
             method: 'POST',
-            body: JSON.stringify(churchData)
+            body: churchData
         });
     }
 
     async updateChurch(id, churchData) {
-        return this.request(`/churches/${id}`, {
+        return this.request(`/igrejas/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(churchData)
+            body: churchData
         });
     }
 
     async deleteChurch(id) {
-        return this.request(`/churches/${id}`, {
+        return this.request(`/igrejas/${id}`, {
             method: 'DELETE'
         });
     }
 
-    // Participants endpoints
+    // Participantes
     async getParticipants() {
-        return this.request('/participants');
+        return this.request('/participantes');
     }
 
     async getParticipant(id) {
-        return this.request(`/participants/${id}`);
+        return this.request(`/participantes/${id}`);
     }
 
     async createParticipant(participantData) {
-        return this.request('/participants', {
+        return this.request('/participantes', {
             method: 'POST',
-            body: JSON.stringify(participantData)
+            body: participantData
         });
     }
 
     async updateParticipant(id, participantData) {
-        return this.request(`/participants/${id}`, {
+        return this.request(`/participantes/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(participantData)
+            body: participantData
         });
     }
 
     async deleteParticipant(id) {
-        return this.request(`/participants/${id}`, {
+        return this.request(`/participantes/${id}`, {
+            method: 'DELETE'
+        });
+    }
+    
+    async confirmPayment(participantId) {
+        return this.request(`/participantes/${participanteId}/confirmar-pagamento`, {
+            method: 'PUT'
+        });
+    }
+
+    async unconfirmPayment(participantId) {
+        return this.request(`/participantes/${participanteId}/confirmar-pagamento`, {
             method: 'DELETE'
         });
     }
 
-    // Transactions endpoints
+    // Transações
     async getTransactions() {
-        return this.request('/transactions');
+        return this.request('/transacoes');
     }
 
     async getTransaction(id) {
-        return this.request(`/transactions/${id}`);
+        return this.request(`/transacoes/${id}`);
     }
 
     async createTransaction(transactionData) {
-        return this.request('/transactions', {
+        return this.request('/transacoes', {
             method: 'POST',
-            body: JSON.stringify(transactionData)
+            body: transactionData
         });
     }
 
     async updateTransaction(id, transactionData) {
-        return this.request(`/transactions/${id}`, {
+        return this.request(`/transacoes/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(transactionData)
+            body: transactionData
         });
     }
 
     async deleteTransaction(id) {
-        return this.request(`/transactions/${id}`, {
+        return this.request(`/transacoes/${id}`, {
             method: 'DELETE'
         });
     }
 
-    // Dashboard endpoints
+    // Dashboard
     async getDashboardStats() {
         return this.request('/dashboard/stats');
     }
