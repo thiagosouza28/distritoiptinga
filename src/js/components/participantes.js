@@ -128,7 +128,7 @@ export class Participantes {
                 const participante = await this.dashboard.fetchItem('participantes', itemId);
                 const igrejas = await this.dashboard.fetchItem('igrejas');
                 const options = igrejas.map(igreja => {
-                     const isSelected = participante.igreja && participante.igreja === igreja._id.$oid;
+                     const isSelected = participante.igreja && participante.igreja === igreja.igreja;
                      return `<option value="${igreja.igreja}" ${isSelected ? 'selected' : ''}>${igreja.igreja}</option>`;
                 }).join('');
 
