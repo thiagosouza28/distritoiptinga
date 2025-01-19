@@ -3,7 +3,7 @@ export class Participantes {
         this.dashboard = dashboard;
     }
 
-    renderParticipantes(data) {
+ renderParticipantes(data) {
         return `
             <div class="page-header">
                 <h2>Participantes</h2>
@@ -19,6 +19,8 @@ export class Participantes {
                             <th>Nome</th>
                             <th>Data de Nascimento</th>
                             <th>Idade</th>
+                            <th>Usuário</th>
+                            <th>Email</th>
                             <th>Igreja</th>
                             <th>Data de Inscrição</th>
                             <th>Data de Confirmação</th>
@@ -26,39 +28,29 @@ export class Participantes {
                         </tr>
                     </thead>
                     <tbody>
-
-                    dd/mm/aaaa: ${data.map(participante => {
-                        const dataNascimento = participante.nascimento ? new Date(participante.nascimento) : null;
-                        const dataFormatada = dataNascimento 
-                            ? `${dataNascimento.getDate().toString().padStart(2, '0')}/${(dataNascimento.getMonth() + 1).toString().padStart(2, '0')}/${dataNascimento.getFullYear()}`
-                            : 'N/A';
-                        const idade = dataNascimento ? this.dashboard.calculateAge(dataNascimento) : 'N/A';
-                    
-                        return `
-
-                                <tr>
-                                    <td>${participante.id_participante || 'N/A'}</td>
-                                    <td>${participante.nome}</td>
-                                    <td>${dataFormatada}</td>
-                                    <td>${idade}</td>
-                                    <td>${participante.id_usuario ? participante.id_usuario.nome : 'N/A'}</td>
-                                    <td>${participante.id_usuario ? participante.id_usuario.email : 'N/A'}</td>
-                                    <td>${participante.igreja ? participante.igreja.igreja : 'N/A'}</td>
-                                    <td>${participante.data_inscricao ? this.dashboard.formatDate(participante.data_inscricao) : 'N/A'}</td>
-                                    <td>${participante.data_confirmacao ? this.dashboard.formatDate(participante.data_confirmacao) : 'Pendente'}</td>
-                                    <td class="actions">
-                                        <button onclick="dashboard.openModal('participante', '${participante.id_participante}')" class="btn-edit">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button onclick="dashboard.deleteItem('participantes', '${participante.id_participante}')" class="btn-delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <button onclick="dashboard.confirmPayment('${participante.id_participante}')" class="btn-confirm">
-                                            <i class="fas fa-check"></i> Confirmar Pagamento
-                                        </button>
-                                    </td>
-                                </tr>`;
-        }).join('')}
+                        ${data.map(participante => `
+                            <tr>
+                                <td>${participante.id_participante || 'N/A'}</td>
+                                <td>${participante.nome}</td>
+                                <td>${this.dashboard.formatDate(participante.nascimento)}</td>
+                                <td>${this.dashboard.calculateAge(participante.nascimento)}</td>
+                                <td>${participante.id_usuario ? participante.id_usuario.nome : 'N/A'}</td>
+                                <td>${participante.id_usuario ? participante.id_usuario.email : 'N/A'}</td>
+                                <td>${participante.id_igreja ? participante.id_igreja.nome : 'N/A'}</td>
+                                <td>${participante.data_inscricao ? this.dashboard.formatDate(participante.data_inscricao) : 'N/A'}</td>
+                                <td>${participante.data_confirmacao ? this.dashboard.formatDate(participante.data_confirmacao) : 'Pendente'}</td>
+                                <td class="actions">
+                                    <button onclick="dashboard.openModal('participante', '${participante.id_participante}')" class="btn-edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="dashboard.deleteItem('participantes', '${participante.id_participante}')" class="btn-delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button onclick="dashboard.confirmPayment('${participante.id_participante}')" class="btn-confirm">
+                                        <i class="fas fa-check"></i> Confirmar Pagamento
+                                    </button>
+                                </td>
+                            </tr>`).join('')}
                     </tbody>
                 </table>
             </div>`;
@@ -93,8 +85,8 @@ export class Participantes {
                 const participante = await this.dashboard.fetchItem('participantes', itemId);
                 const igrejas = await this.dashboard.fetchItem('igrejas');
                 const options = igrejas.map(igreja => {
-                    const isSelected = participante.igreja && participante.igreja === igreja.igreja;
-                    return `<option value="${igreja.igreja}" ${isSelected ? 'selected' : ''}>${igreja.igreja}</option>`;
+                    const isSelected = participante.id_igreja && participante.id_igreja.$oid === igreja._id.$oid;
+                    return `<option value="${igreja._id.$oid}" ${isSelected ? 'selected' : ''}>${igreja.nome}</option>`;
                 }).join('');
 
                 html = `
@@ -140,17 +132,14 @@ export class Participantes {
                         return;
                     }
 
-                    // Aqui você vai pegar o ID do usuário logado
-                    const userId = this.dashboard.userId;
-
                     const data = {
                         nome: formData.get('nome'),
                         email: formData.get('email'),
                         nascimento: formData.get('nascimento'),
-                        igreja: selectedIgrejaId,
+                        id_igreja: selectedIgrejaId,
                         igreja: selectIgreja.options[selectIgreja.selectedIndex].text,
                         idade: this.dashboard.calculateAge(formData.get('nascimento')),
-                        id_usuario: userId
+                        id_usuario: this.dashboard.userId
                     };
 
                     try {
@@ -188,8 +177,8 @@ export class Participantes {
                 if (selectIgreja) {
                     igrejas.forEach(igreja => {
                         const option = document.createElement('option');
-                        option.value = igreja.igreja;
-                        option.text = igreja.igreja;
+                        option.value = igreja._id.$oid;
+                        option.text = igreja.nome;
                         selectIgreja.appendChild(option);
                     });
                 }
