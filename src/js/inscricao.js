@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function carregarIgrejas() {
     try {
         console.log("Iniciando carregarIgrejas");
-        const response = await fetch('http://localhost:4000/api/igrejas');
+        const response = await fetch('https://api-ckry.onrender.com/api/igrejas');
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Erro ao carregar igrejas. Verifique a conexão com o servidor.');
