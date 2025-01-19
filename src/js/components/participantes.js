@@ -26,43 +26,46 @@ export class Participantes {
                         </tr>
                     </thead>
                     <tbody>
-
-                    dd/mm/aaaa: ${data.map(participante => {
-                        const dataNascimento = participante.nascimento ? new Date(participante.nascimento) : null;
-                        const dataFormatada = dataNascimento 
-                            ? `${dataNascimento.getDate().toString().padStart(2, '0')}/${(dataNascimento.getMonth() + 1).toString().padStart(2, '0')}/${dataNascimento.getFullYear()}`
-                            : 'N/A';
-                        const idade = dataNascimento ? this.dashboard.calculateAge(dataNascimento) : 'N/A';
-                    
-                        return `
-
-                                <tr>
-                                    <td>${participante.id_participante || 'N/A'}</td>
-                                    <td>${participante.nome}</td>
-                                    <td>${dataFormatada}</td>
-                                    <td>${idade}</td>
-                                    <td>${participante.id_usuario ? participante.id_usuario.nome : 'N/A'}</td>
-                                    <td>${participante.id_usuario ? participante.id_usuario.email : 'N/A'}</td>
-                                    <td>${participante.igreja ? participante.igreja.igreja : 'N/A'}</td>
-                                    <td>${participante.data_inscricao ? this.dashboard.formatDate(participante.data_inscricao) : 'N/A'}</td>
-                                    <td>${participante.data_confirmacao ? this.dashboard.formatDate(participante.data_confirmacao) : 'Pendente'}</td>
-                                    <td class="actions">
-                                        <button onclick="dashboard.openModal('participante', '${participante.id_participante}')" class="btn-edit">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button onclick="dashboard.deleteItem('participantes', '${participante.id_participante}')" class="btn-delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <button onclick="dashboard.confirmPayment('${participante.id_participante}')" class="btn-confirm">
-                                            <i class="fas fa-check"></i> Confirmar Pagamento
-                                        </button>
-                                    </td>
-                                </tr>`;
-        }).join('')}
+                        ${data.map(participante => this.renderParticipanteRow(participante)).join('')}
                     </tbody>
                 </table>
             </div>`;
     }
+
+    renderParticipanteRow(participante) {
+        const dataNascimento = participante.nascimento ? new Date(participante.nascimento) : null;
+        const dataFormatada = dataNascimento
+            ? this.dashboard.formatDate(participante.nascimento)
+            : 'N/A';
+        const idade = dataNascimento ? this.dashboard.calculateAge(participante.nascimento) : 'N/A';
+        const igrejaNome = participante.igreja ? participante.igreja.igreja : 'N/A'; // Corrected to use 'nome'
+        const dataInscricaoFormatada = participante.data_inscricao ? this.dashboard.formatDate(participante.data_inscricao) : 'N/A';
+        const dataConfirmacaoFormatada = participante.data_confirmacao ? this.dashboard.formatDate(participante.data_confirmacao) : 'Pendente';
+
+
+        return `
+            <tr>
+                <td>${participante.id_participante || 'N/A'}</td>
+                <td>${participante.nome}</td>
+                <td>${dataFormatada}</td>
+                <td>${idade}</td>
+                <td>${igrejaNome}</td>  <!-- Corrected to use igreja.nome -->
+                <td>${dataInscricaoFormatada}</td>
+                <td>${dataConfirmacaoFormatada}</td>
+                <td class="actions">
+                    <button onclick="dashboard.openModal('participante', '${participante.id_participante}')" class="btn-edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="dashboard.deleteItem('participantes', '${participante.id_participante}')" class="btn-delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button onclick="dashboard.toggleConfirmPayment('${participante.id_participante}')" class="btn-confirm">
+                        <i class="fas fa-${participante.data_confirmacao ? 'times' : 'check'}"></i> ${participante.data_confirmacao ? 'Cancelar Confirmação' : 'Confirmar Pagamento'}
+                    </button>
+                </td>
+            </tr>`;
+    }
+
 
     async renderParticipanteModalContent(itemId = null) {
         let html = `
@@ -91,11 +94,9 @@ export class Participantes {
         if (itemId) {
             try {
                 const participante = await this.dashboard.fetchItem('participantes', itemId);
-                const igrejas = await this.dashboard.fetchItem('igrejas');
-                const options = igrejas.map(igreja => {
-                    const isSelected = participante.igreja && participante.igreja === igreja.igreja;
-                    return `<option value="${igreja.igreja}" ${isSelected ? 'selected' : ''}>${igreja.igreja}</option>`;
-                }).join('');
+                const igrejas = await this.dashboard.fetchItems('igrejas'); // fetchItems instead of fetchItem
+
+                const options = igrejas.map(igreja => `<option value="${igreja._id}" ${participante.igreja && participante.igreja._id === igreja._id ? 'selected' : ''}>${igreja.nome}</option>`).join('');
 
                 html = `
                     <form id="participanteForm">
@@ -109,7 +110,7 @@ export class Participantes {
                         </div>
                         <div class="input-group">
                             <label for="nascimento">Data de Nascimento:</label>
-                            <input type="date" id="nascimento" name="nascimento" value="${participante.nascimento ? this.dashboard.formatDateForInput(participante.nascimento) : ''}" required>
+                            <input type="date" id="nascimento" name="nascimento" value="${this.dashboard.formatDateForInput(participante.nascimento)}" required>
                         </div>
                         <div class="input-group">
                             <label for="igreja">Igreja:</label>
@@ -131,65 +132,33 @@ export class Participantes {
             if (form) {
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    const selectIgreja = document.getElementById('igreja');
-                    const selectedIgrejaId = selectIgreja.value;
                     const formData = new FormData(form);
-
-                    if (!selectedIgrejaId) {
-                        this.dashboard.showNotification('Por favor, selecione uma igreja.', 'error');
-                        return;
-                    }
-
-                    // Aqui você vai pegar o ID do usuário logado
-                    const userId = this.dashboard.userId;
-
                     const data = {
                         nome: formData.get('nome'),
                         email: formData.get('email'),
                         nascimento: formData.get('nascimento'),
-                        igreja: selectedIgrejaId,
-                        igreja: selectIgreja.options[selectIgreja.selectedIndex].text,
-                        idade: this.dashboard.calculateAge(formData.get('nascimento')),
-                        id_usuario: userId
+                        igreja: formData.get('igreja'), // Get the church ID
+                        id_usuario: this.dashboard.userId
                     };
 
                     try {
-                        let method = 'POST';
-                        let url = '/participantes';
-                        if (itemId) {
-                            method = 'PUT';
-                            url += `/${itemId}`;
-                        }
-
-                        const response = await this.dashboard.makeRequest(url, {
-                            method,
-                            body: JSON.stringify(data)
-                        });
-
-                        if (response.ok) {
-                            this.dashboard.showNotification(`Participante ${itemId ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
-                            this.dashboard.closeModal();
-                            await this.dashboard.loadPage('participantes');
-                        } else {
-                            const errorData = await response.json();
-                            this.dashboard.showNotification(`Erro ao ${itemId ? 'atualizar' : 'adicionar'} participante: ${errorData.message || 'Erro Desconhecido'}`, 'error');
-                        }
+                        await this.dashboard.handleFormSubmit(e, 'participantes', data); // Use the dashboard's function
                     } catch (error) {
-                        console.error(`Erro ao ${itemId ? 'atualizar' : 'adicionar'} participante:`, error);
-                        this.dashboard.showNotification(`Erro ao ${itemId ? 'atualizar' : 'adicionar'} participante: ${error.message || 'Erro Desconhecido'}`, 'error');
+                        console.error("Erro no handleSubmit:", error);
+                        this.dashboard.showNotification("Erro ao salvar o participante.", "error");
                     }
                 });
             }
 
             // Carrega as igrejas
             try {
-                const igrejas = await this.dashboard.fetchItem('igrejas');
+                const igrejas = await this.dashboard.fetchItems('igrejas');
                 const selectIgreja = document.getElementById('igreja');
                 if (selectIgreja) {
                     igrejas.forEach(igreja => {
                         const option = document.createElement('option');
-                        option.value = igreja.igreja;
-                        option.text = igreja.igreja;
+                        option.value = igreja._id; // Use the _id
+                        option.text = igreja.igreja; // Use the nome
                         selectIgreja.appendChild(option);
                     });
                 }
