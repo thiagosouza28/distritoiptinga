@@ -26,41 +26,45 @@ export class Participantes {
                         </tr>
                     </thead>
                     <tbody>
-                        ${data.map(participante => `
-                            <tr>
-                                <td>${participante.id_participante || 'N/A'}</td>
-                                <td>${participante.nome}</td>
-                                <td>${this.dashboard.formatDate(participante.nascimento)}</td>
-                                <td>${this.dashboard.calculateAge(participante.nascimento)}</td>
-                                <td>${participante.id_usuario ? participante.id_usuario.nome : 'N/A'}</td>
-                                <td>${participante.id_usuario ? participante.id_usuario.email : 'N/A'}</td>
-                                <td>${participante.igreja ? participante.igreja.igreja : 'N/A'}</td>
-                                <td>${participante.data_inscricao ? this.dashboard.formatDate(participante.data_inscricao) : 'N/A'}</td>
-                                <td>${participante.data_confirmacao ? this.dashboard.formatDate(participante.data_confirmacao) : 'Pendente'}</td>
-                                <td class="actions">
-                                    <button onclick="dashboard.openModal('participante', '${participante.id_participante}')" class="btn-edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="dashboard.deleteItem('participantes', '${participante.id_participante}')" class="btn-delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <button onclick="dashboard.confirmPayment('${participante.id_participante}')" class="btn-confirm">
-                                        <i class="fas fa-check"></i> Confirmar Pagamento
-                                    </button>
-                                    <button onclick="dashboard.unconfirmPayment('${participante.id_participante}')" class="btn-unconfirm">
-                                        <i class="fas fa-times-circle"></i> Cancelar Confirmação
-                                    </button>
-                                </td>
-                            </tr>`).join('')}
+
+                    dd/mm/aaaa: ${data.map(participante => {
+                        const dataNascimento = participante.nascimento ? new Date(participante.nascimento) : null;
+                        const dataFormatada = dataNascimento 
+                            ? `${dataNascimento.getDate().toString().padStart(2, '0')}/${(dataNascimento.getMonth() + 1).toString().padStart(2, '0')}/${dataNascimento.getFullYear()}`
+                            : 'N/A';
+                        const idade = dataNascimento ? this.dashboard.calculateAge(dataNascimento) : 'N/A';
+                    
+                        return `
+
+                                <tr>
+                                    <td>${participante.id_participante || 'N/A'}</td>
+                                    <td>${participante.nome}</td>
+                                    <td>${dataFormatada}</td>
+                                    <td>${idade}</td>
+                                    <td>${participante.id_usuario ? participante.id_usuario.nome : 'N/A'}</td>
+                                    <td>${participante.id_usuario ? participante.id_usuario.email : 'N/A'}</td>
+                                    <td>${participante.igreja ? participante.igreja.igreja : 'N/A'}</td>
+                                    <td>${participante.data_inscricao ? this.dashboard.formatDate(participante.data_inscricao) : 'N/A'}</td>
+                                    <td>${participante.data_confirmacao ? this.dashboard.formatDate(participante.data_confirmacao) : 'Pendente'}</td>
+                                    <td class="actions">
+                                        <button onclick="dashboard.openModal('participante', '${participante.id_participante}')" class="btn-edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="dashboard.deleteItem('participantes', '${participante.id_participante}')" class="btn-delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <button onclick="dashboard.confirmPayment('${participante.id_participante}')" class="btn-confirm">
+                                            <i class="fas fa-check"></i> Confirmar Pagamento
+                                        </button>
+                                    </td>
+                                </tr>`;
+        }).join('')}
                     </tbody>
                 </table>
             </div>`;
     }
 
     async renderParticipanteModalContent(itemId = null) {
-        const isAdmin = this.dashboard.userRole === 'administrador';
-        const userIgreja = this.dashboard.userChurch;
-
         let html = `
             <form id="participanteForm">
                 <div class="input-group">
@@ -136,6 +140,9 @@ export class Participantes {
                         return;
                     }
 
+                    // Aqui você vai pegar o ID do usuário logado
+                    const userId = this.dashboard.userId;
+
                     const data = {
                         nome: formData.get('nome'),
                         email: formData.get('email'),
@@ -143,7 +150,7 @@ export class Participantes {
                         igreja: selectedIgrejaId,
                         igreja: selectIgreja.options[selectIgreja.selectedIndex].text,
                         idade: this.dashboard.calculateAge(formData.get('nascimento')),
-                        id_usuario: this.dashboard.userId
+                        id_usuario: userId
                     };
 
                     try {
@@ -174,26 +181,17 @@ export class Participantes {
                 });
             }
 
-            // Carrega as igrejas baseado no tipo de usuário
+            // Carrega as igrejas
             try {
+                const igrejas = await this.dashboard.fetchItem('igrejas');
                 const selectIgreja = document.getElementById('igreja');
                 if (selectIgreja) {
-                    if (isAdmin) {
-                        // Carrega todas as igrejas para o administrador
-                        const igrejas = await this.dashboard.fetchItem('igrejas');
-                        igrejas.forEach(igreja => {
-                            const option = document.createElement('option');
-                            option.value = igreja._id.$oid;
-                            option.text = igreja.igreja;
-                            selectIgreja.appendChild(option);
-                        });
-                    } else if (userIgreja) {
-                        // Carrega apenas a igreja do usuário responsável
+                    igrejas.forEach(igreja => {
                         const option = document.createElement('option');
-                        option.value = userIgreja;
-                        option.text = userIgreja;
+                        option.value = igreja.igreja;
+                        option.text = igreja.igreja;
                         selectIgreja.appendChild(option);
-                    }
+                    });
                 }
             } catch (error) {
                 console.error('Erro ao carregar igrejas:', error);
