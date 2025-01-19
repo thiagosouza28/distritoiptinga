@@ -1,4 +1,3 @@
-// No arquivo dashboard.js
 import { Usuarios } from './usuarios.js';
 import { Igrejas } from './igrejas.js';
 import { Participantes } from './participantes.js';
@@ -9,8 +8,8 @@ import { Modal } from './modal.js';
 
 export default class Dashboard {
     constructor() {
-        this.currentPage = 'transacoes';
-        this.baseUrl = 'https://api-ckry.onrender.com/api';
+        this.currentPage = 'usuarios';
+        this.baseUrl = 'http://localhost:4000/api';
         this.userRole = null;
         this.userId = null;
         this.userChurch = null;
@@ -173,11 +172,10 @@ export default class Dashboard {
             const response = await this.makeRequest(endpoint);
             if (response.ok) {
                 const data = await response.json();
-                // Verifica se os dados são para a página de transações e se é um objeto com uma propriedade 'transactions' que é um array
-                if (page === 'transacoes' && typeof data === 'object' && data.transactions && Array.isArray(data.transactions)) {
-                    this.renderPage(page, data.transactions, this.igrejasData);
-                } else {
-                    this.renderPage(page, data);
+                 if (page === 'transacoes') {
+                   this.renderPage(page, data, this.igrejasData);
+                 } else {
+                   this.renderPage(page, data);
                 }
             } else {
                 const errorData = await response.json();
@@ -223,20 +221,20 @@ export default class Dashboard {
                 'Content-Type': 'application/json'
             }
         };
-
+    
         let url = `${this.baseUrl}${endpoint}`;
         if (options.params) {
             const queryParams = new URLSearchParams(options.params).toString();
             url += `?${queryParams}`;
         }
-
+    
         try {
             const response = await fetch(url, {
                 ...defaultOptions,
                 ...options,
                 body: options.body ? JSON.stringify(options.body) : null
             });
-
+    
             if (!response.ok) {
                 let errorMsg = `Erro na requisição para ${url}: Status ${response.status}`;
                 try {
@@ -247,8 +245,14 @@ export default class Dashboard {
                 }
                 throw new Error(errorMsg);
             }
-
-            return response.ok ? response.json() : null;
+    
+            // Verifica se a resposta tem conteúdo antes de tentar fazer o parse
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                return await response.json();
+            } else {
+                return null; // Retorna null se a resposta não for JSON
+            }
         } catch (error) {
             console.error(`Erro na requisição para ${url}:`, error);
             throw error;
@@ -266,16 +270,11 @@ export default class Dashboard {
     }
 
     formatDate(date) {
-        if (!date) return 'Data Inválida';
-      
-        const formattedDate = new Date(date);
-        if (isNaN(formattedDate.getTime())) return 'Data Inválida';
-    
-        const day = formattedDate.getDate().toString().padStart(2, '0');
-        const month = (formattedDate.getMonth() + 1).toString().padStart(2, '0');
-        const year = formattedDate.getFullYear();
-    
-        return `${day}/${month}/${year}`;
+        return new Date(date).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
     }
 
     formatCurrency(value) {
@@ -299,6 +298,7 @@ export default class Dashboard {
         }
         return age;
     }
+    
 
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
@@ -350,14 +350,18 @@ export default class Dashboard {
         const form = e.target;
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
+
+        // Adiciona o id da igreja ao objeto de dados, se disponível
         const selectIgreja = form.querySelector('#igreja');
-        const selectedIgrejaId = selectIgreja.value;
-    
-        if (selectedIgrejaId) {
-            data.igreja = selectedIgrejaId;
-            data.igreja = selectIgreja.options[selectIgreja.selectedIndex].text;
+        if (selectIgreja) {
+            const selectedIgrejaId = selectIgreja.value;
+            if (selectedIgrejaId) {
+                data.id_igreja = selectedIgrejaId;
+                // Inclui também o nome da igreja, se necessário
+                data.igreja = selectIgreja.options[selectIgreja.selectedIndex].text;
+            }
         }
-    
+
         try {
             let method = 'POST';
             let url = `/${page}`;
@@ -365,12 +369,12 @@ export default class Dashboard {
                 method = 'PUT';
                 url += `/${this.selectedItemId}`;
             }
-    
+
             const response = await this.makeRequest(url, {
-                method: method,
+                method,
                 body: JSON.stringify(data)
             });
-    
+
             if (response.ok) {
                 this.showNotification(`Item ${this.selectedItemId ? 'atualizado' : 'adicionado'} com sucesso na página ${page}!`, 'success');
                 this.closeModal();
