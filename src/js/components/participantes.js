@@ -3,7 +3,7 @@ export class Participantes {
         this.dashboard = dashboard;
     }
 
-   renderParticipantes(data) {
+    renderParticipantes(data) {
         return `
             <div class="page-header">
                 <h2>Participantes</h2>
@@ -26,14 +26,16 @@ export class Participantes {
                         </tr>
                     </thead>
                     <tbody>
-dd/mm/aaaa: ${data.map(participante => {
-    const dataNascimento = participante.nascimento ? new Date(participante.nascimento) : null;
-    const dataFormatada = dataNascimento 
-        ? `${dataNascimento.getDate().toString().padStart(2, '0')}/${(dataNascimento.getMonth() + 1).toString().padStart(2, '0')}/${dataNascimento.getFullYear()}`
-        : 'N/A';
-    const idade = dataNascimento ? this.dashboard.calculateAge(dataNascimento) : 'N/A';
 
-    return {
+                    dd/mm/aaaa: ${data.map(participante => {
+                        const dataNascimento = participante.nascimento ? new Date(participante.nascimento) : null;
+                        const dataFormatada = dataNascimento 
+                            ? `${dataNascimento.getDate().toString().padStart(2, '0')}/${(dataNascimento.getMonth() + 1).toString().padStart(2, '0')}/${dataNascimento.getFullYear()}`
+                            : 'N/A';
+                        const idade = dataNascimento ? this.dashboard.calculateAge(dataNascimento) : 'N/A';
+                    
+                        return `
+
                                 <tr>
                                     <td>${participante.id_participante || 'N/A'}</td>
                                     <td>${participante.nome}</td>
@@ -56,7 +58,7 @@ dd/mm/aaaa: ${data.map(participante => {
                                         </button>
                                     </td>
                                 </tr>`;
-                        }).join('')}
+        }).join('')}
                     </tbody>
                 </table>
             </div>`;
