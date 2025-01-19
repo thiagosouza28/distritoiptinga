@@ -10,7 +10,7 @@ import { Modal } from './modal.js';
 export default class Dashboard {
     constructor() {
         this.currentPage = 'transacoes';
-        this.baseUrl = 'https://api-ckry.onrender.com/apii';
+        this.baseUrl = 'https://api-ckry.onrender.com/api';
         this.userRole = null;
         this.userId = null;
         this.userChurch = null;
