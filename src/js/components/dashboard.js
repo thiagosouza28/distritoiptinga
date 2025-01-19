@@ -348,7 +348,7 @@ export default class Dashboard {
         // Adiciona o id da igreja e o nome da igreja ao objeto de dados
         const selectIgreja = form.querySelector('#igreja');
         if (selectIgreja) {
-            data.id_igreja = selectIgreja.value;
+            data.igreja = selectIgreja.value;
             data.igreja = selectIgreja.options[selectIgreja.selectedIndex].text;
         }
 
