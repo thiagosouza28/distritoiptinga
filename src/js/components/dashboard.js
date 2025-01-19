@@ -32,6 +32,7 @@ export default class Dashboard {
             content: document.getElementById('content'),
             navLinks: document.querySelectorAll('.nav-links .nav-item a'),
             logoutBtn: document.getElementById('logoutBtn'),
+            logoutBtnTop: document.getElementById('logoutBtnTop'), // Added for consistency
             sidebarCollapse: document.getElementById('sidebarCollapse'),
             userInfo: {
                 name: document.getElementById('userName'),
@@ -39,6 +40,7 @@ export default class Dashboard {
                 avatar: document.getElementById('userAvatar')
             },
             loadingSpinner: document.querySelector('.loading-spinner'),
+            processingPaymentOverlay: document.getElementById('processingPaymentOverlay') // Added for overlay
         };
         this.modal.setElements(
             document.getElementById('profileModal'),
@@ -64,7 +66,7 @@ export default class Dashboard {
             });
         });
         this.elements.logoutBtn.addEventListener('click', () => this.handleLogout());
-        document.getElementById('logoutBtnTop').addEventListener('click', () => this.handleLogout());
+        this.elements.logoutBtnTop.addEventListener('click', () => this.handleLogout()); // Added event listener
         this.elements.sidebarCollapse.addEventListener('click', () => this.toggleSidebar());
 
     }
@@ -80,6 +82,7 @@ export default class Dashboard {
     }
 
     async confirmPayment(participanteId) {
+        this.showProcessingPaymentOverlay(); // Show overlay before request
         try {
             const response = await this.makeRequest(`/participantes/${participanteId}/confirmar-pagamento`, {
                 method: 'PUT'
@@ -88,16 +91,19 @@ export default class Dashboard {
                 this.showNotification('Pagamento confirmado com sucesso!', 'success');
                 await this.loadPage('participantes');
             } else {
-                 const errorData = await response.json();
+                const errorData = await response.json();
                 this.showNotification(`Erro ao confirmar pagamento: ${errorData.message || 'Erro Desconhecido'}`, 'error');
             }
         } catch (error) {
             console.error('Erro ao confirmar pagamento:', error);
-           this.showNotification('Erro ao confirmar pagamento', 'error');
+            this.showNotification('Erro ao confirmar pagamento', 'error');
+        } finally {
+            this.hideProcessingPaymentOverlay(); // Hide overlay after request, regardless of success or failure
         }
     }
 
     async unconfirmPayment(id_participante) {
+        this.showProcessingPaymentOverlay(); // Show overlay
         try {
             const response = await this.makeRequest(`/participantes/${id_participante}/cancelar-confirmacao`, {
                 method: 'PUT'
@@ -107,12 +113,14 @@ export default class Dashboard {
                 this.showNotification('Confirmação de pagamento cancelada!', 'success');
                 await this.loadPage('participantes');
             } else {
-                 const errorData = await response.json();
-               this.showNotification(`Erro ao cancelar confirmação de pagamento: ${errorData.message || 'Erro Desconhecido'}`, 'error');
+                const errorData = await response.json();
+                this.showNotification(`Erro ao cancelar confirmação de pagamento: ${errorData.message || 'Erro Desconhecido'}`, 'error');
             }
         } catch (error) {
             console.error('Erro ao cancelar confirmação de pagamento:', error);
-             this.showNotification('Erro ao cancelar confirmação de pagamento', 'error');
+            this.showNotification('Erro ao cancelar confirmação de pagamento', 'error');
+        } finally {
+            this.hideProcessingPaymentOverlay(); // Hide overlay
         }
     }
 
@@ -161,11 +169,7 @@ export default class Dashboard {
         if (userData) {
             this.elements.userInfo.name.textContent = userData.nome || 'Usuário';
             this.elements.userInfo.role.textContent = userData.cargo || 'Cargo não definido';
-            if (userData.avatar) {
-                this.elements.userInfo.avatar.src = userData.avatar;
-            } else {
-                this.elements.userInfo.avatar.src = 'assets/default-avatar.png';
-            }
+            this.elements.userInfo.avatar.src = userData.avatar || 'assets/default-avatar.png';
         }
     }
 
@@ -175,19 +179,13 @@ export default class Dashboard {
 
     filterNavigation() {
         const navLinks = Array.from(this.elements.navLinks);
-        navLinks.forEach(link => {
-            link.parentElement.style.display = 'none';
-        });
+        navLinks.forEach(link => link.parentElement.style.display = 'none');
 
         if (this.userRole === 'diretor_jovem') {
             const participantesLink = navLinks.find(link => link.getAttribute('data-page') === 'participantes');
-            if (participantesLink) {
-                participantesLink.parentElement.style.display = 'block';
-            }
+            if (participantesLink) participantesLink.parentElement.style.display = 'block';
         } else {
-            navLinks.forEach(link => {
-                link.parentElement.style.display = 'block';
-            });
+            navLinks.forEach(link => link.parentElement.style.display = 'block');
         }
     }
 
@@ -203,7 +201,7 @@ export default class Dashboard {
         await this.loadPage(page);
     }
 
-     async loadPage(page) {
+    async loadPage(page) {
         try {
             this.showLoading();
             let endpoint = `/${page}`;
@@ -220,43 +218,36 @@ export default class Dashboard {
             }
 
             if (page === 'participantes' && this.userRole === 'diretor_jovem' && this.userChurch) {
-                  queryParams = {
-                    igreja: this.userChurch,
-                };
+                queryParams = { igreja: this.userChurch };
                 endpoint += '?' + new URLSearchParams(queryParams).toString();
-             }
-
-             console.log(`Chamando: ${endpoint}`);
-             const response = await this.makeRequest(endpoint);
-
-
-            if (response && response.ok) {
-                 const data = await response.json();
-                 if (page === 'transacoes' && typeof data === 'object' && data.transactions && Array.isArray(data.transactions)) {
-                    this.renderPage(page, data.transactions, this.igrejasData);
-                 } else {
-                    this.renderPage(page, data);
-                 }
             }
-            else {
-               let errorMessage = `Erro na requisição para ${endpoint}: `;
-                if(response){
-                  try {
-                      const errorData = await response.json();
-                       errorMessage += errorData.message || 'Erro Desconhecido';
-                    } catch (error) {
-                       errorMessage +=  'Erro ao processar resposta do servidor';
-                   }
-               } else {
-                    errorMessage += 'Sem resposta do servidor';
-               }
-              throw new Error(errorMessage);
-             }
-         } catch (error) {
+
+            console.log(`Chamando: ${endpoint}`);
+            const response = await this.makeRequest(endpoint);
+
+
+            if (response.ok) {
+                const data = await response.json();
+                if (page === 'transacoes' && data.transactions && Array.isArray(data.transactions)) {
+                    this.renderPage(page, data.transactions, this.igrejasData);
+                } else {
+                    this.renderPage(page, data);
+                }
+            } else {
+                let errorMessage = `Erro na requisição para ${endpoint}: `;
+                try {
+                    const errorData = await response.json();
+                    errorMessage += errorData.message || 'Erro Desconhecido';
+                } catch (error) {
+                    errorMessage += 'Erro ao processar resposta do servidor';
+                }
+                throw new Error(errorMessage);
+            }
+        } catch (error) {
             console.error(`Erro ao carregar a página ${page}:`, error);
-           this.showNotification(`Erro ao carregar a página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
-         } finally {
-           this.hideLoading();
+            this.showNotification(`Erro ao carregar a página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
+        } finally {
+            this.hideLoading();
         }
     }
 
@@ -270,14 +261,14 @@ export default class Dashboard {
             case 'igrejas':
                 html = this.igrejas.renderIgrejas(data);
                 break;
-             case 'participantes':
+            case 'participantes':
                 html = this.participantes.renderParticipantes(data);
                 break;
             case 'transacoes':
-               html = this.transacoes.renderTransacoes(data, igrejasData);
-               break;
+                html = this.transacoes.renderTransacoes(data, igrejasData);
+                break;
             default:
-               html = '<div>Página não encontrada</div>';
+                html = '<div>Página não encontrada</div>';
                 break;
         }
 
@@ -285,12 +276,12 @@ export default class Dashboard {
     }
 
     async makeRequest(endpoint, options = {}) {
-         const token = localStorage.getItem('token');
-         const defaultOptions = {
+        const token = localStorage.getItem('token');
+        const defaultOptions = {
             headers: {
-                 'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-           }
+            }
         };
 
         try {
@@ -298,38 +289,40 @@ export default class Dashboard {
                 ...defaultOptions,
                 ...options
             });
-           if (!response.ok) {
-               let errorData = {};
+            if (!response.ok) {
+                let errorData = {};
                 try {
-                   errorData = await response.json();
-               } catch (jsonError) {
+                    errorData = await response.json();
+                } catch (jsonError) {
                     console.error('Erro ao fazer parse do JSON de erro', jsonError);
-                   errorData = { message: `Erro ao buscar dados em ${endpoint}` };
-               }
-               const errorMessage = errorData.message || `Erro ao buscar dados em ${endpoint}`;
-              throw new Error(errorMessage);
+                    errorData = { message: `Erro ao buscar dados em ${endpoint}` };
+                }
+                const errorMessage = errorData.message || `Erro ao buscar dados em ${endpoint}`;
+                throw new Error(errorMessage);
             }
-           return response;
+            return response;
         } catch (error) {
-             console.error(`Erro na requisição para ${endpoint}:`, error);
-             throw error;
+            console.error(`Erro na requisição para ${endpoint}:`, error);
+            throw error;
         }
     }
 
     showLoading() {
-         if (this.elements.loadingSpinner) {
-             this.elements.loadingSpinner.style.display = 'flex';
+        if (this.elements.loadingSpinner) {
+            this.elements.loadingSpinner.style.display = 'flex';
         }
-   }
+    }
 
     hideLoading() {
-         if (this.elements.loadingSpinner) {
+        if (this.elements.loadingSpinner) {
             this.elements.loadingSpinner.style.display = 'none';
         }
     }
 
-    formatDate(date) {
-        return new Date(date).toLocaleDateString('pt-BR', {
+    formatDate(dateString) {
+        if (!dateString) return ''; // Handle null or undefined dates
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric'
@@ -351,21 +344,20 @@ export default class Dashboard {
         const birth = new Date(birthDate);
         const today = new Date();
         let age = today.getFullYear() - birth.getFullYear();
-        if (
-            today.getMonth() - birth.getMonth() <= 0 &&
-            today.getDate() - birth.getDate() <= 0
-        ) age--;
+        const m = today.getMonth() - birth.getMonth();
+        const d = today.getDate() - birth.getDate();
+        if (m < 0 || (m === 0 && d < 0)) age--;
         return age;
     }
 
     showNotification(message, type = 'info') {
-       const notification = document.createElement('div');
-       notification.className = `notification ${type}`;
-       notification.innerHTML = `
-           <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
-           ${message}
-       `;
-       document.body.appendChild(notification);
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+            ${message}
+        `;
+        document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 3000);
     }
 
@@ -375,36 +367,36 @@ export default class Dashboard {
     }
 
     toggleSidebar() {
-       this.elements.sidebar.classList.toggle('active');
+        this.elements.sidebar.classList.toggle('active');
     }
 
     openModal(modalId, itemId = null) {
         this.selectedItemId = itemId;
-       this.modal.openModal(modalId, itemId);
-   }
+        this.modal.openModal(modalId, itemId);
+    }
 
     closeModal() {
-       this.modal.closeModal();
+        this.modal.closeModal();
         this.selectedItemId = null;
     }
 
     openProfileModal() {
-       this.modal.openProfileModal();
-   }
+        this.modal.openProfileModal();
+    }
 
-   closeProfileModal() {
-      this.modal.closeProfileModal();
-   }
+    closeProfileModal() {
+        this.modal.closeProfileModal();
+    }
 
     openSettingsModal() {
-      this.modal.openSettingsModal();
+        this.modal.openSettingsModal();
     }
 
     closeSettingsModal() {
         this.modal.closeSettingsModal();
     }
 
-   async handleFormSubmit(e, page) {
+    async handleFormSubmit(e, page) {
         e.preventDefault();
         const form = e.target;
         const formData = new FormData(form);
@@ -412,155 +404,139 @@ export default class Dashboard {
 
         const selectIgreja = form.querySelector('#igreja');
         if (selectIgreja && selectIgreja.value) {
-            const selectedIgreja = selectIgreja.value;
-            if (selectedIgreja) {
-               data.igreja = selectedIgreja;
-              data.igreja = selectIgreja.options[selectIgreja.selectedIndex].text;
-           }
+            data.igreja = selectIgreja.value; // Use the value, not the text
         }
 
         try {
-           let method = 'POST';
-           let url = `/${page}`;
+            let method = 'POST';
+            let url = `/${page}`;
 
-           if (this.selectedItemId) {
-               method = 'PUT';
-               url += `/${this.selectedItemId}`;
-           }
-          const response = await this.makeRequest(url, {
+            if (this.selectedItemId) {
+                method = 'PUT';
+                url += `/${this.selectedItemId}`;
+            }
+            const response = await this.makeRequest(url, {
                 method: method,
-               body: JSON.stringify(data)
-           });
+                body: JSON.stringify(data)
+            });
 
             if (response.ok) {
-               this.showNotification(`Item ${this.selectedItemId ? 'atualizado' : 'adicionado'} com sucesso na página ${page}!`, 'success');
-              this.closeModal();
+                this.showNotification(`Item ${this.selectedItemId ? 'atualizado' : 'adicionado'} com sucesso na página ${page}!`, 'success');
+                this.closeModal();
                 await this.loadPage(page);
-           } else {
-              const errorData = await response.json();
+            } else {
+                const errorData = await response.json();
                 this.showNotification(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}: ${errorData.message || 'Erro Desconhecido'}`, 'error');
-           }
-       } catch (error) {
-            console.error(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}:`, error);
-           this.showNotification(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
-        }
-    }
-
-    isValidObjectId(id) {
-        const ObjectId = (m = (id) => {
-            if (!m.Types.ObjectId.isValid(id)) {
-                throw new Error('ID inválido');
-           }
-             return id;
-        })(mongoose);
-
-        try {
-            ObjectId(id);
-            return true;
+            }
         } catch (error) {
-            return false;
+            console.error(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}:`, error);
+            this.showNotification(`Erro ao ${this.selectedItemId ? 'atualizar' : 'adicionar'} item na página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
         }
     }
+
+
+    // isValidObjectId is unnecessary here, server-side validation is preferred.
 
     async deleteItem(page, itemId) {
         if (!confirm(`Tem certeza que deseja excluir este item?`)) {
             return;
-       }
+        }
 
         try {
-           const response = await this.makeRequest(`/${page}/${itemId}`, {
+            const response = await this.makeRequest(`/${page}/${itemId}`, {
                 method: 'DELETE'
-           });
-           if (response.ok) {
-               this.showNotification(`Item excluído com sucesso da página ${page}!`, 'success');
-               await this.loadPage(page);
-           } else {
-              const errorData = await response.json();
-               this.showNotification(`Erro ao excluir item da página ${page}: ${errorData.message || 'Erro Desconhecido'}`, 'error');
-           }
+            });
+            if (response.ok) {
+                this.showNotification(`Item excluído com sucesso da página ${page}!`, 'success');
+                await this.loadPage(page);
+            } else {
+                const errorData = await response.json();
+                this.showNotification(`Erro ao excluir item da página ${page}: ${errorData.message || 'Erro Desconhecido'}`, 'error');
+            }
         } catch (error) {
             console.error(`Erro ao excluir item da página ${page}:`, error);
-           this.showNotification(`Erro ao excluir item da página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
-       }
+            this.showNotification(`Erro ao excluir item da página ${page}: ${error.message || 'Erro Desconhecido'}`, 'error');
+        }
     }
 
     handleLanguageChange() {
-       this.modal.handleLanguageChange();
+        this.modal.handleLanguageChange();
     }
 
     handleNotificationChange() {
-       this.modal.handleNotificationChange();
+        this.modal.handleNotificationChange();
     }
 
     async fetchItem(page, itemId = null) {
         let endpoint = `/${page}`;
-       if (itemId) {
-             endpoint += `/${itemId}`;
-        }
-        else if (page !== 'usuarios' && page !== 'transacoes' && page !== 'igrejas' && page !== 'participantes') {
-           throw new Error(`ID do item é obrigatório para a página ${page}`);
+        if (itemId) {
+            endpoint += `/${itemId}`;
+        } else if (!['usuarios', 'transacoes', 'igrejas', 'participantes'].includes(page)) {
+            throw new Error(`ID do item é obrigatório para a página ${page}`);
         }
 
-       const response = await this.makeRequest(endpoint);
-       if (!response.ok) {
+        const response = await this.makeRequest(endpoint);
+        if (!response.ok) {
             throw new Error(`Erro ao carregar o item ${itemId} de ${page}`);
-       }
-      return response.json();
+        }
+        return response.json();
     }
 
-     async fetchItems(page) {
+    async fetchItems(page) {
         try {
             const response = await this.makeRequest(`/${page}`);
             if (!response.ok) {
                 throw new Error(`Erro ao carregar itens de ${page}`);
             }
             return response.json();
-         }
-        catch(error){
-           console.error(`Erro ao buscar itens de ${page}:`, error)
+        } catch (error) {
+            console.error(`Erro ao buscar itens de ${page}:`, error);
             this.showNotification(`Erro ao buscar itens de ${page}`, 'error');
+            return []; // Return empty array on error to prevent crashes
         }
     }
 
-   formatDateForInput(dateString) {
+    formatDateForInput(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
-         const year = date.getFullYear();
-       const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const day = date.getDate().toString().padStart(2, '0');
-       return `${year}-${month}-${day}`;
+        return `${year}-${month}-${day}`;
     }
 
     async updateItem(resource, itemId, data) {
-       try {
+        try {
             const response = await this.makeRequest(`/${resource}/${itemId}`, {
-                 method: 'PUT',
+                method: 'PUT',
                 body: JSON.stringify(data)
             });
 
-           const responseData = await response.json();
+            const responseData = await response.json();
 
             if (!response.ok) {
-              throw new Error(responseData.error || `Erro ao atualizar ${resource}.`);
+                throw new Error(responseData.error || `Erro ao atualizar ${resource}.`);
             }
 
             this.showNotification(`${resource.charAt(0).toUpperCase() + resource.slice(1)} atualizado(a) com sucesso!`, 'success');
             this.closeModal();
             this.loadPage(this.currentPage);
-           return responseData;
-       } catch (error) {
-           console.error(`Erro ao atualizar ${resource}:`, error);
+            return responseData;
+        } catch (error) {
+            console.error(`Erro ao atualizar ${resource}:`, error);
             this.showNotification(error.message, 'error');
-       }
+        }
     }
 
     showProcessingPaymentOverlay() {
-        const overlay = document.getElementById('processingPaymentOverlay');
-        if(overlay) overlay.style.display = 'flex';
-      }
-    
+        if (this.elements.processingPaymentOverlay) {
+            this.elements.processingPaymentOverlay.style.display = 'flex';
+        }
+    }
+
     hideProcessingPaymentOverlay() {
-        const overlay = document.getElementById('processingPaymentOverlay');
-         if(overlay) overlay.style.display = 'none';
+        if (this.elements.processingPaymentOverlay) {
+            this.elements.processingPaymentOverlay.style.display = 'none';
+        }
     }
 }
