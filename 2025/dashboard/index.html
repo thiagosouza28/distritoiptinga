@@ -178,10 +178,10 @@
     
         <div class="modal-overlay" aria-hidden="true"></div>
         <!-- Overlay de carregamento do pagamento -->
-        <div id="processingPaymentOverlay" class="overlay" style="display: none;">
-          <div class="modal">
-            <h2>Processando Pagamento</h2>
-            <div class="loading-spinner" style="display:flex"></div>
+<div id="processingPaymentOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; justify-content: center; align-items: center;">
+    <div>Processando pagamento...</div>
+</div>
+
             <p>Aguarde enquanto confirmamos o pagamento...</p>
          </div>
        </div>
