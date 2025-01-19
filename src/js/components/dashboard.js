@@ -354,7 +354,7 @@ export default class Dashboard {
         const selectedIgrejaId = selectIgreja.value;
     
         if (selectedIgrejaId) {
-            data.id_igreja = selectedIgrejaId;
+            data.igreja = selectedIgrejaId;
             data.igreja = selectIgreja.options[selectIgreja.selectedIndex].text;
         }
     
