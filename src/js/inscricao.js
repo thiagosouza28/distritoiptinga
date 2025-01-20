@@ -23,8 +23,8 @@ async function carregarIgrejas() {
         selectIgreja.innerHTML = '<option value="">Selecione uma Igreja</option>';
         igrejas.forEach(igreja => {
             const option = document.createElement('option');
-            option.value = igreja.igreja;
-            option.text = igreja.igreja;
+            option.value = igreja._id;
+            option.text = igreja.nome;
             selectIgreja.appendChild(option);
         });
         console.log("Igrejas carregadas com sucesso!");
