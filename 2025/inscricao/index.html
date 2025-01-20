@@ -33,33 +33,45 @@
                 </div>
                 <div class="input-group">
                     <label for="nascimento" id="nascimentoLabel">Data de Nascimento:</label>
-                    <input type="date" id="nascimento" name="nascimento" aria-required="true" aria-describedby="nascimentoLabel" required>
+                    <input type="date" id="nascimento" name="nascimento" aria-required="true"
+                        aria-describedby="nascimentoLabel" required>
                 </div>
                 <div class="input-group">
                     <label for="igreja" id="igrejaLabel">Igreja:</label>
                     <select id="igreja" name="igreja" aria-required="true" aria-describedby="igrejaLabel" required>
                         <option value="">Selecione uma Igreja</option>
+
                     </select>
                 </div>
-                 <button type="submit" class="btn">Enviar Inscrição</button>
+                <button type="submit" class="btn">Enviar Inscrição</button>
             </form>
-         </div>
+
+            <p class="alternative-link">
+                Se o formulário acima não estiver funcionando, você pode usar este 
+                <a href="https://forms.gle/gtZvBAEtmJL7BQdS9" target="_blank" rel="noopener">link alternativo para se
+                    inscrever</a>.
+            </p>
+
+        </div>
+
+
         <div id="processingOverlay" class="overlay" style="display: none;" aria-busy="true" aria-live="polite">
-           <div class="modal" role="dialog" aria-labelledby="processingModalLabel">
-               <h2 id="processingModalLabel">Processando Inscrição</h2>
-               <div class="loading-spinner" style="display:flex"></div>
+            <div class="modal" role="dialog" aria-labelledby="processingModalLabel">
+                <h2 id="processingModalLabel">Processando Inscrição</h2>
+                <div class="loading-spinner"></div>  
                 <p>Aguarde enquanto processamos sua inscrição...</p>
-           </div>
-       </div>
-        <div id="confirmationModal" class="modal" aria-modal="true" role="dialog" aria-labelledby="confirmationModalLabel"
-           style="display: none;">
+            </div>
+        </div>
+
+        <div id="confirmationModal" class="modal" aria-modal="true" role="dialog"
+            aria-labelledby="confirmationModalLabel" style="display: none;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 id="confirmationModalLabel">Inscrição Realizada</h2>
                     <button type="button" class="close-modal" aria-label="Fechar Modal"
-                         onclick="hideConfirmationModal()">×</button>
-               </div>
-               <div class="modal-body">
+                        onclick="hideConfirmationModal()">×</button>
+                </div>
+                <div class="modal-body">
                     <p>Sua inscrição foi realizada com sucesso!</p>
                 </div>
             </div>
